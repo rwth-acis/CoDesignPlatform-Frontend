@@ -1,0 +1,120 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<script src="../bower_components/page/page.js"></script>
+<script>
+
+/* see https://www.polymer-project.org/1.0/docs/migration#polymer-ready
+  If you are not using the web components polyfills (for example, in a Chrome extension),
+  the WebComponentsReady event will not fire.
+  With native HTML imports and custom elements, elements upgrade synchronously,
+  so the event is not required.
+  Simply place any scripts that manipulate Polymer elements at the end of the page,
+  and all elements should be ready.
+*/
+
+  //  window.addEventListener('WebComponentsReady', function() {
+    //window.onload = function(){
+        console.log("WebComponentsReady routing.html: window.onload");
+        var app = document.querySelector('#app');
+        app.baseHref = "http://localhost:8080/template";
+        app.baseUrl = '';
+        // We use Page.js for routing. This is a Micro
+        // client-side router inspired by the Express router
+        // More info: https://visionmedia.github.io/page.js/
+
+        if (window.location.port === '') {  // if production
+            page.base(app.baseUrl.replace(/\/$/, ''));
+        }
+
+        // Middleware
+        // function scrollToTop(ctx, next) {
+        //     app.scrollPageToTop();
+        //     next();
+        // }
+
+        // page('*', scrollToTop, function(ctx, next) {
+        //     next();
+        // });
+
+        // Routes
+        page('/', function() {
+            app.route = 'home';
+            console.log("routing.html app.route:"+app.route);
+        });
+
+        page('/signin-result', function() {
+            console.log("in signin-result");
+            page.redirect('/signin-result');
+        });
+
+        page(app.baseUrl, function() {
+            app.route = 'home';
+        });
+
+        page('/projects', function() {
+            app.route = 'projects';
+            app.scrollProjToTop();
+            app.component = {};
+        });
+
+        page('/projects/:projectId', function(data) {
+            app.route = 'project-info';
+            app.params = data.params;
+            app.component = {};
+            app.loadProjectInfo(data.params.projectId);
+        });
+
+        page('/projects/:projectId/components/:componentId', function(data) {
+            if (app.compChanged(data.params.componentId)){
+                app.route = 'component-info';
+                app.params = data.params;
+                app.selectedFilter = "active";
+                app.loadComponentInfo(data.params.componentId);
+                app.closeCollapses();
+            }
+        });
+
+        page('/projects/:projectId/components/:componentId/create', function(data) {
+            app.route = 'component-info';
+            app.params = data.params;
+            // open create new requirement dialog
+            app.loadComponentInfo(data.params.componentId);
+            app.showCreateRequirement();
+        });
+
+        page('/projects/:projectId/components/:componentId/edit', function(data) {
+            app.route = 'component-info';
+            app.params = data.params;
+            app.loadComponentInfo(data.params.componentId);
+        });
+
+        page('/projects/:projectId/components/:componentId/requirements/:requirementId', function(data) {
+            app.route = 'component-info';
+            app.params = data.params;
+            app.scrollToReq(data.params.componentId, data.params.requirementId);
+        });
+
+
+        page('*', function(data) {
+//            app.$.superToast.text = 'Can\'t find: ' + window.location.href  + '. Please try to reload!';
+//            app.$.superToast.show();
+//            console.log(data);
+            page(data.path.substring(1));
+        });
+
+        //add #! before urls
+        page({
+            hashbang: false
+        });
+
+//   });
+//}
+</script>

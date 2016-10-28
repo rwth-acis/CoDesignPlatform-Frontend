@@ -1,0 +1,81 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+
+<dom-module id="my-projects">
+  <!-- Defines the element's style and local DOM -->
+  <template>
+    <style>
+      :host {
+        display: block;
+        padding: 16px;
+      }
+    </style>
+    <!--<h1>Projects</h1>
+    <a href="https://github.com/login/oauth/authorize?client_id=b6d65034ff402a6e6f4d&scope=repo">
+      <paper-button raised>Login GitHub</paper-button>
+    </a>
+    -->
+    <div>
+    <iron-ajax
+            id="projectsLoader"
+            url="{{baseHref}}/projects"
+            last-response="{{projects}}"
+            auto
+            loading="{{loading}}">
+    </iron-ajax>
+    <p>Projects</p>
+    <!-- LIST OF PROJECTS -->
+    <div class="layout vertical center">
+        <template is="dom-if" if="{{!specific}}">
+            <template is="dom-repeat" items="{{projects}}" filter="{{searchFilter(filterValue)}}">
+                <paper-card heading="[[item.name]]" on-tap="onProjectTap">
+                    <div class="card-content">[[item.html_url]]</div>
+                </paper-card>
+            </template>
+        </template>
+
+        <template is="dom-if" if="{{specific}}">
+            <template is="dom-repeat" items="{{projects}}" filter="{{searchFilter2(filterValue)}}">
+                <paper-card heading="[[item.name]]" on-tap="onProjectTap">
+                    <div class="card-content">[[item.html_url]]</div>
+                </paper-card>
+            </template>
+        </template>
+    </div>
+
+      </template>
+  <!-- Creates the element's prototype and registers it -->
+  <script>
+    Polymer({
+      is: 'my-projects',
+      properties: {
+        projects: {
+            type: Array,
+            notify: true
+        },
+        specific: {
+            type: Boolean,
+            value: false
+        },
+        route: Object,
+        baseHref: String,
+        isAuthorized: {
+          type: Boolean,
+          observer:'_isAuthorizedChanged'
+        },
+
+      },
+
+      load: function(){
+        this.$.projectsLoader.generateRequest();
+        console.log("load call url: "+this.$.projectsLoader.url);
+      },
+
+      _isAuthorizedChanged: function(newVal,oldVal){
+        console.log("my-projects.html isAuthorized.oldVal:"+oldVal);
+        console.log("my-projects.html isAuthorized.newVal:"+newVal);
+      }
+
+    });
+  </script>
+</dom-module>

@@ -1,0 +1,204 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-view2">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+
+            paper-card {
+                width: 100%;
+                max-width: 700px;
+                margin-bottom: 16px;
+                cursor: pointer;
+            }
+
+            paper-card:hover {
+                background-color: var(--list-hover-background-color);
+            }
+        </style>
+        <div>
+        <iron-ajax
+          id="getAccessToken"
+          url="{{baseHref}}/githubaccess"
+          last-response="{{token}}"
+          params="{{parameters}}"
+          on-request="onrequestdetail"
+          loading="{{loading}}">
+        </iron-ajax>
+        <p on-tap="checkCurrentUrl">baseHref/projects=[[baseHref]]/projects</p>
+        <p on-tap="getToken">token:[[token]]</p>
+        </div>
+        <!--<iron-ajax
+                id="projectsLoader"
+                url="{{baseHref}}/projects"
+                last-response="{{projects}}"
+                params="{{parameters}}"
+                auto
+                loading="{{loading}}"></iron-ajax>-->
+
+
+        <iron-ajax
+          id="projectsLoader"
+          url="{{baseHref}}/projects"
+          last-response="{{projects}}"
+          auto
+          loading="{{loading}}">
+        </iron-ajax>
+
+
+        <div class="layout vertical center">
+            <template is="dom-if" if="{{!specific}}">
+                <template is="dom-repeat" items="{{projects}}" filter="{{searchFilter(filterValue)}}">
+                    <paper-card heading="[[item.name]]" on-tap="onProjectTap">
+                        <div class="card-content">[[item.html_url]]</div>
+                    </paper-card>
+                </template>
+            </template>
+
+            <template is="dom-if" if="{{specific}}">
+                <template is="dom-repeat" items="{{projects}}" filter="{{searchFilter2(filterValue)}}">
+                    <paper-card heading="[[item.name]]" on-tap="onProjectTap">
+                        <div class="card-content">[[item.html_url]]</div>
+                    </paper-card>
+                </template>
+            </template>
+        </div>
+
+    </template>
+
+    <script>
+        (function () {
+//            'use strict';
+
+            Polymer({
+                is: 'my-view2',
+                properties: {
+                    projects: {
+                        type: Array,
+                        notify: true
+                    },
+                    filterValue: {
+                        type: String,
+                        value: ''
+                    },
+                    specific: {
+                        type: Boolean,
+                        value: false
+                    },
+                    baseHref: String,
+                    loading:{
+                        type: Boolean,
+                        notify: true
+                    },
+                    codeValue: {
+                        type: String,
+                        value: ''
+                    },
+                    parameters:{
+                        type:Object,
+                        computed: 'processParams(codeValue)'
+                    },
+                    token :{
+                      type:String
+                    },
+
+                },
+
+                processParams: function(codeValue) {
+                  //console.log("codeValue in processParams:"+codeValue);
+                  return {
+                    code: codeValue
+                  };
+                },
+
+                // for debug & test
+                checkCurrentUrl: function (e) {
+                  // get current whole URL (because GitHub redirects)
+                  var location = window.location.href;
+                  // get the value of query parameter "code" in the URL
+                  this.codeValue = this.getQueryStringValue("code");
+                  e.target.innerText = "location:"+location+", code:"+this.codeValue+", params:"+this.parameters.code;
+                },
+
+                //for get github token test
+                getToken: function (e){
+                  var request = this.$.getAccessToken;
+                  request.generateRequest();
+                  console.log("getToken request:"+request.requestUrl);
+                  console.log("token:"+request.lastResponse);
+                },
+
+                getQueryStringValue: function (key) {
+                 return unescape(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + escape(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+                },
+
+                onrequestdetail: function(e,detail){
+                  console.log("make a request detail.request.requestUrl:"+detail.request.requestUrl);
+                  console.log("make a request detail.request.url:"+detail.request.url);
+                },
+
+                onProjectTap: function (e) {
+                    var model = e.model;
+                    page('/projects/' + model.item.id);
+                },
+
+                // thanks goes to http://jcrowther.io/2015/06/09/polymer-dom-repeat-filtering-and-sorting/ for the great help
+                /**
+                 * Returns true either if the filter expression is empty, or if the filter expression is included in
+                 * either the project's name or description.
+                 *
+                 * @param val
+                 * @returns {Function}
+                 */
+                searchFilter: function (val) {
+                    return function (item) {
+                        if (!val) {
+                            return true;
+                        }
+                        //return (item.name && ~item.name.toLowerCase().indexOf(val.toLowerCase()));
+                        return (item.name && ~item.name.toLowerCase().indexOf(val.toLowerCase())) || (item.description && ~item.description.toLowerCase().indexOf(val.toLowerCase()));
+                    };
+                },
+
+                // does it really work?
+                // or iron-ajax request is triggered by auto property
+                load: function() {
+                    console.log("in load function");
+                    this.$.projectsLoader.generateRequest();
+                },
+
+                //to toggle between all projects and my projects
+                toggle: function() {
+                    this.specific = ! this.specific;
+                },
+
+                searchFilter2: function (val) {
+                    return function (item) {
+                        if (!val) {
+//                            console.log(app.currentUser);
+                            return item.leaderId == app.currentUser.id;
+                        }
+                        //return (item.name && ~item.name.toLowerCase().indexOf(val.toLowerCase()));
+                        return (item.leaderId == app.currentUser.id && item.name && ~item.name.toLowerCase().indexOf(val.toLowerCase())) || (item.leaderId == app.currentUser.id && item.description && ~item.description.toLowerCase().indexOf(val.toLowerCase()));
+                    };
+                }
+
+            });
+        })
+        ();
+    </script>
+
+</dom-module>

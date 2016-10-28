@@ -1,0 +1,34 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+`my-el`
+
+
+@demo demo/index.html 
+-->
+
+<dom-module id="my-el">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <h2>Hello [[prop1]]</h2>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'my-el',
+
+      properties: {
+        prop1: {
+          type: String,
+          value: 'my-el',
+        },
+      },
+
+    });
+  </script>
+</dom-module>

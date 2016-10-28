@@ -1,0 +1,285 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog-behavior/paper-dialog-behavior.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-textarea.html">
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/paper-menu-button/paper-menu-button.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+
+
+
+<link rel="import" href="my-projects.html">
+
+<link rel="import" href="github-signin/github-signin.html">
+
+<!-- Configure your routes here -->
+<link rel="import" href="routing.html">
+
+<dom-module id="my-app">
+  <template>
+
+    <style>
+      :host {
+        --app-primary-color: #4285f4;
+        --app-secondary-color: black;
+
+        display: block;
+      }
+
+      app-header {
+        color: #fff;
+        background-color: var(--app-primary-color);
+      }
+      app-header paper-icon-button {
+        --paper-icon-button-ink-color: white;
+      }
+
+      .drawer-list {
+        margin: 0 20px;
+      }
+
+      .drawer-list a {
+        display: block;
+
+        padding: 0 16px;
+
+        text-decoration: none;
+
+        color: var(--app-secondary-color);
+
+        line-height: 40px;
+      }
+
+      .drawer-list a.iron-selected {
+        color: black;
+
+        font-weight: bold;
+      }
+    </style>
+
+<!--
+    <app-location route="{{route}}"></app-location>
+    <app-route
+        route="{{route}}"
+        pattern="/:page"
+        data="{{routeData}}"
+        tail="{{subroute}}"></app-route>
+-->
+      <!-- Drawer content -->
+<!--
+      <app-drawer>
+      <app-toolbar>Menu</app-toolbar>
+        <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
+          <a name="projects" href="/projects">Projects</a>
+          <a name="view2" href="/view2">View Two</a>
+          <a name="view3" href="/view3">View Three</a>
+          <template is="dom-if" if="{{isAuthorized}}">
+              <p>isAuthorized</p>
+          </template>
+        </iron-selector>
+      </app-drawer>
+    -->
+
+      <!-- Header & Toolbar at the top -->
+
+
+        <!-- Main Content -->
+
+        <paper-button id="button1" raised on-click="dialog.open()">open dialog button1</paper-button>
+
+        <paper-dialog id="dialog">
+        <h2>Dialog Title</h2>
+        <p>Lorem ipsum dolor sit amet, </p>
+        </paper-dialog>
+        
+        <div class="content" style="height:100%;">
+        <!--
+        <iron-pages
+                selected="[[page]]"
+                attr-for-selected="name"
+                fallback-selection="view404"
+                role="main">
+          -->
+          <iron-pages attr-for-selected="data-route" selected="{{route}}" style="height:100%;">
+            <section data-route="home" href="{{baseUrl}}" style="height:100%;">
+              Welcome
+
+              <paper-button id="button2" raised on-click="onCreateDialogTap">open dialog button2</paper-button>
+
+
+            </section>
+
+            <section id="projectsSection" data-route="projects" href="{{baseUrl}}projects" style="height:100%;">
+
+              <paper-scroll-header-panel id="scrollProjects">
+                <!--
+                <paper-material elevation="1" style="height:180px;">
+                  <h1>test</h1>
+                  <paper-fab class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>
+                </paper-material>
+                -->
+
+                <my-projects name="projects" base-href={{baseHref}} is-authorized={{isAuthorized}}></my-projects>
+
+              </paper-scroll-header-panel>
+
+              <template is="dom-if" if="{{isAuthorized}}">
+                <!--<paper-fab class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab> -->
+                <paper-fab id="createProjectBtn" class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>
+              </template>
+
+              <paper-fab id="createProjectBtnTest" class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>
+
+
+
+
+
+
+
+              <!-- CREATE NEW PROJECT -->
+              <paper-dialog id="createProject" class="create" entry-animation="fade-in-animation"
+              exit-animation="fade-out-animation" no-cancel-on-outside-click
+              no-cancel-on-esc-key
+              on-iron-overlay-closed="onCreateProjectClosed">
+              <h2><i18n-msg msgid="createProject"></i18n-msg></h2>
+              <i18n-msg class="i18nLabel" msgid="formTitle" msg="{{formTitle}}"></i18n-msg>
+              <paper-input char-counter maxlength="50" label$="[[formTitle]]" id="newProjectTitle"></paper-input>
+              <i18n-msg class="i18nLabel" msgid="formDesc" msg="{{formDesc}}"></i18n-msg>
+              <paper-textarea label="[[formDesc]]" id="newProjectDesc"></paper-textarea>
+
+              <div class="buttons">
+                <paper-button dialog-dismiss><i18n-msg msgid="cancel"></i18n-msg></paper-button>
+                <paper-button dialog-confirm autofocus><i18n-msg msgid="save"></i18n-msg></paper-button>
+              </div>
+              </paper-dialog>
+
+            <iron-ajax
+            id="postProjectRequest"
+            handle-as="json"
+            url="{{baseHref}}/projects"
+            content-type="application/json"
+            method="POST"
+            headers="{{header}}"
+            on-response="handleResponseProject"
+            on-error="errorHandler"></iron-ajax>
+
+            <paper-toast id="projToast"></paper-toast>
+
+
+
+          </section>
+
+          <section data-route="view2" href="{{baseUrl}}view2" style="height:100%;">
+            <my-view2 name="view2" base-href={{baseHref}}></my-view2>
+          </section>
+
+      </iron-pages>
+    </div>
+  </template>
+<!--  <script src="../scripts/app.js"></script> -->
+  <script>
+
+(function () {
+    Polymer({
+      is: 'my-app',
+
+      properties: {
+        page: {
+          type: String,
+          reflectToAttribute: true,
+          //observer: '_pageChanged'
+        },
+        baseHref: {
+          type:String,
+          //value:'http://localhost:8080/template'
+        },
+        loading:{
+          type: Boolean,
+          notify: true
+        },
+        isAuthorized:{
+          type: Boolean,
+          observer:'_isAuthorizedChanged'
+        },
+      },
+      // observers: [
+      //   '_routePageChanged(routeData.page)'
+      // ],
+      //
+      // _routePageChanged: function(page) {
+      //   console.log("route:"+routeData);
+      //   this.page = page || 'projects';
+      // },
+      //
+      // _pageChanged: function(page) {
+      //   // Load page import on demand. Show 404 page if fails
+      //   var resolvedPageUrl = this.resolveUrl('my-' + page + '.html');
+      //   console.log("resolvedPageUrl:"+resolvedPageUrl);
+      //   //this.importHref(resolvedPageUrl, null, this._showPage404, true);
+      //   console.log("baseHref:"+this.baseHref);
+      //
+      // },
+
+
+      _isAuthorizedChanged: function(newVal,oldVal){
+        console.log("app.html isAuthorized.oldVal:"+oldVal);
+        console.log("app.html isAuthorized.newVal:"+newVal);
+      },
+
+      _showPage404: function() {
+        this.page = 'view404';
+      },
+
+      speak: function() {
+        console.log("baseHref:"+this.baseHref);
+      },
+
+      ready: function() {
+        console.log("childNodes.length:"+Polymer.dom(this.root).childNodes.length); // 5
+        for (i=0;i<Polymer.dom(this.root).childNodes.length;i++){
+          var test = Polymer.dom(this.root).childNodes[i];
+          console.log(test.id);
+        }
+      },
+
+      onCreateProjectTap: function(e){
+        console.info(e.target.id + ' was clicked.');
+        Polymer.dom(this.$.createProject).open();
+        //this.$.createProject.open();
+      }
+
+    });
+})
+();
+
+
+  </script>
+</dom-module>
