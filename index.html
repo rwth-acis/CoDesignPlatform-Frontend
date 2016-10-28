@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+
+<html lang="en">
+<head id="index">
+
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+  <title>Co-Design Platform</title>
+  <meta name="description" content="My App description">
+
+  <link rel="icon" href="/images/favicon.ico">
+
+  <!-- See https://goo.gl/OOhYW5 -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- See https://goo.gl/qRE0vM -->
+  <meta name="theme-color" content="#3f51b5">
+
+  <!-- Add to homescreen for Chrome on Android. Fallback for manifest.json -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="My App">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="My App">
+
+  <!-- Homescreen icons -->
+  <link rel="apple-touch-icon" href="/images/manifest/icon-48x48.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/images/manifest/icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="96x96" href="/images/manifest/icon-96x96.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/images/manifest/icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="/images/manifest/icon-192x192.png">
+
+  <!-- Tile icon for Windows 8 (144x144 + tile color) -->
+  <meta name="msapplication-TileImage" content="/images/manifest/icon-144x144.png">
+  <meta name="msapplication-TileColor" content="#3f51b5">
+  <meta name="msapplication-tap-highlight" content="no">
+
+
+  <link rel="stylesheet" href="styles/main.css">
+
+
+  <script>
+  // Setup Polymer options
+  window.Polymer = {
+    dom: 'shadow',
+    lazyRegister: true
+  };
+
+  // Load webcomponentsjs polyfill if browser does not support native Web Components
+  (function() {
+    'use strict';
+
+    var onload = function() {
+      // For native Imports, manually fire WebComponentsReady so user code
+      // can use the same code path for native and polyfill'd imports.
+      if (!window.HTMLImports) {
+        console.log("new CustomEvent WebComponentsReady"); // this will show in Chrome, not in safari
+        document.dispatchEvent(
+          new CustomEvent('WebComponentsReady', {bubbles: true})
+        );
+      }
+    };
+
+    var webComponentsSupported = (
+      'registerElement' in document
+      && 'import' in document.createElement('link')
+      && 'content' in document.createElement('template')
+    );
+
+    if (!webComponentsSupported) {
+      var script = document.createElement('script');
+      script.async = true;
+      script.src = '/bower_components/webcomponentsjs/webcomponents-lite.min.js';
+      script.onload = onload;
+      document.head.appendChild(script);
+    } else {
+      onload();
+    }
+  })();
+
+  // Load pre-caching Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/service-worker.js');
+    });
+  }
+
+
+  /**
+  * Elements are guartneed to be upgraded and ready at this point.
+  * It's safe to poke element properties, call methods, etc.
+  *
+  * Note: in Chrome (or a browser that natively supports HTML Imports)
+  * waiting for this event is not needed. Imports will have already
+  * loaded and upgraded elements by the time the bottom of the page
+  * is reached. However, waiting for this event consolidates the code
+  * paths between native and polyfill.
+  *
+  * see https://gist.github.com/ebidel/1d5ede1e35b6f426a2a7
+  * this event only fires when browser doesn't support HTML Imports, e.g. Safari
+  */
+
+  /* see https://www.polymer-project.org/1.0/docs/migration#polymer-ready
+    If you are not using the web components polyfills (for example, in a Chrome extension),
+    the WebComponentsReady event will not fire.
+    With native HTML imports and custom elements, elements upgrade synchronously,
+    so the event is not required.
+    Simply place any scripts that manipulate Polymer elements at the end of the page,
+    and all elements should be ready.
+  */
+  document.addEventListener('WebComponentsReady', function(e) {
+    alert('WebComponentsReady!!! This only fires in Browser does not support HTML Imports');
+  });
+
+  </script>
+
+
+
+  <style>
+  body {
+    margin: 0;
+    font-family: 'Roboto', 'Noto', sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    background-color: #eeeeee;
+  }
+  </style>
+
+  <link rel="import" href="elements/elements.html">
+  <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+
+
+</head>
+<body unresolved class="fullbleed layout vertical">
+
+  <template is="dom-bind" id="app">
+
+  <!--<github-signin-aware is-authorized="{{isAuthorized}}" on-github-signin-aware-success="handleSigninSuccess"></github-signin-aware>-->
+    <paper-toast id="superToast"></paper-toast>
+    <paper-scroll-header-panel class="flex">
+      <!-- Main Toolbar -->
+      <paper-toolbar id="mainToolbar">
+        <template is="dom-if" if="{{componentPage(route)}}">
+          <paper-icon-button id="paperToggle" icon="menu" on-tap="toggCompDrawer"></paper-icon-button>
+        </template>
+        <div class="app-name">
+          <a href$="{{baseUrl}}">
+            Co-Design Platform
+          </a>
+        </div>
+        <span class="flex"></span>
+        <github-signin id="githubSignInBtn" is-authorized="{{isAuthorized}}" scopes="repo" client-id="b6d65034ff402a6e6f4d" server="https://github.com/login/oauth/authorize" base-href={{baseHref}}></github-signin>
+      </paper-toolbar>
+
+
+      <div class="content" style="height:100%;">
+
+        <iron-pages attr-for-selected="data-route" selected="{{route}}" style="height:100%;">
+          <section data-route="home" href="{{baseUrl}}" style="height:100%;">
+            Welcome
+            <paper-fab raised onclick="dialog.open()" icon="add">open dialog test</paper-fab>
+            <paper-dialog id="dialog">
+              <h2>Dialog Title</h2>
+              <p>Dialog content</p>
+            </paper-dialog>
+          </section>
+
+          <section id="projectsSection" data-route="projects" href="{{baseUrl}}projects" style="height:100%;">
+
+            <paper-scroll-header-panel id="scrollProjects" class="flex">
+              <my-projects name="projects" id="projectsList" base-href={{baseHref}} is-authorized={{isAuthorized}}></my-projects>
+            </paper-scroll-header-panel>
+
+            <template is="dom-if" if="{{isAuthorized}}">
+              <!--<paper-fab class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab> -->
+              <paper-fab id="createProjectBtn" class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>
+            </template>
+
+            <!--for test-->
+            <!--<paper-fab id="createProjectBtnTest" class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>-->
+            <!--for test-->
+            <paper-button raised onclick="dialog2.open()">open dialog test</paper-button>
+            <paper-dialog id="dialog2">
+              <h2>Dialog Title</h2>
+              <p>Dialog content</p>
+            </paper-dialog>
+
+
+
+            <!-- Dialog: CREATE NEW PROJECT -->
+            <paper-dialog id="createProject" class="create" entry-animation="fade-in-animation"
+            exit-animation="fade-out-animation" modal
+            on-iron-overlay-closed="onCreateProjectClosed">
+              <h2>Create a Project</h2>
+              <p>Project Name</p>
+              <paper-input char-counter maxlength="50" label$="[[formTitle]]" id="newProjectTitle"></paper-input>
+              <p>Project Description</p>
+              <paper-textarea label="[[formDesc]]" id="newProjectDesc"></paper-textarea>
+
+              <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+                <paper-button dialog-confirm autofocus>Save</paper-button>
+              </div>
+          </paper-dialog>
+
+          <iron-ajax
+          id="postProjectRequest"
+          handle-as="json"
+          url="{{baseHref}}/createproject"
+          content-type="application/json"
+          method="POST"
+          headers="{{header}}"
+          on-response="handleResponseProject"
+          on-error="errorHandler"></iron-ajax>
+
+          <paper-toast id="projToast"></paper-toast>
+        </section>
+
+
+      </iron-pages>
+    </div>
+
+
+
+  </paper-scroll-header-panel>
+</template>
+
+<script src="scripts/app.js"></script>
+<!-- Configure your routes here -->
+<link rel="import" href="elements/routing.html">
+</body>
+
+</html>
