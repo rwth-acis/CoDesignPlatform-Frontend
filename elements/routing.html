@@ -55,6 +55,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             page.redirect('/signin-result');
         });
 
+        page('/home2', function() {
+          app.route = 'home2';
+        });
+
         page(app.baseUrl, function() {
             app.route = 'home';
         });
@@ -65,11 +69,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             app.component = {};
         });
 
-        page('/projects/:projectId', function(data) {
+
+        page('/projects/:projectName', function(data) {
             app.route = 'project-info';
             app.params = data.params;
             app.component = {};
-            app.loadProjectInfo(data.params.projectId);
+            app.loadProjectInfo(data.params.projectName);
         });
 
         page('/projects/:projectId/components/:componentId', function(data) {

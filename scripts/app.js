@@ -228,7 +228,7 @@
      * @returns {string} the URL of the resource to query.
      */
     app.getProjectURL = function(projectId) {
-        return this.baseHref + '/projects/' + projectId;
+        //return this.baseHref + '/projects/' + projectId;
     };
 
     /**
@@ -246,14 +246,23 @@
      *
      * @param projectId the id of the project to load.
      */
-    app.loadProjectInfo = function(projectId) {
-        // load the basic project info that is shown in the header
-        this.$.projectInfoLoader.url = app.getProjectURL(projectId);
+    app.loadProjectInfo = function(projectName) {
+        //https://api.github.com/repos/Co-Design-Platform/koala
+        var projectUrl = 'https://api.github.com/repos/Co-Design-Platform/'+projectName;
+        this.$.projectInfoLoader.url = projectUrl;
         this.$.projectInfoLoader.generateRequest();
 
         // load the components of the project
-        this.$.componentsList.projectId = projectId;
+        this.$.componentsList.projectContentsUrl = projectUrl+'/contents?ref=master';
+        this.$.componentsList.projectTreeUrl= projectUrl+'/git/trees/master';
         this.$.componentsList.load();
+
+
+    };
+
+    // for debug
+    app.sentRequest = function(e,detail){
+      console.log("make a request detail.request.url:"+detail.request.url);
     };
 
     /**

@@ -145,33 +145,45 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 
 </head>
-<body unresolved class="fullbleed layout vertical">
+ <body unresolved class="fullbleed layout vertical">
 
   <template is="dom-bind" id="app">
 
   <!--<github-signin-aware is-authorized="{{isAuthorized}}" on-github-signin-aware-success="handleSigninSuccess"></github-signin-aware>-->
     <paper-toast id="superToast"></paper-toast>
-    <paper-scroll-header-panel class="flex">
-      <!-- Main Toolbar -->
-      <paper-toolbar id="mainToolbar">
-        <template is="dom-if" if="{{componentPage(route)}}">
-          <paper-icon-button id="paperToggle" icon="menu" on-tap="toggCompDrawer"></paper-icon-button>
-        </template>
-        <div class="app-name">
-          <a href$="{{baseUrl}}">
-            Co-Design Platform
-          </a>
-        </div>
-        <span class="flex"></span>
-        <github-signin id="githubSignInBtn" is-authorized="{{isAuthorized}}" scopes="repo" client-id="b6d65034ff402a6e6f4d" server="https://github.com/login/oauth/authorize" base-href={{baseHref}}></github-signin>
-      </paper-toolbar>
 
+    <!-- Main Area -->
+    <paper-scroll-header-panel fixed>
+      <div id="headerContainer">
+        <!-- Main Toolbar -->
+        <paper-toolbar id="mainToolbar">
+          <template is="dom-if" if="{{componentPage(route)}}">
+            <paper-icon-button id="paperToggle" icon="menu" on-tap="toggCompDrawer"></paper-icon-button>
+          </template>
+          <div class="app-name">
+            <a href$="{{baseUrl}}">
+              Co-Design Platform
+            </a>
+          </div>
+          <span class="flex"></span>
+          <github-signin id="githubSignInBtn" is-authorized="{{isAuthorized}}" scopes="repo" client-id="b6d65034ff402a6e6f4d" server="https://github.com/login/oauth/authorize" base-href={{baseHref}}></github-signin>
+        </paper-toolbar>
+      </div>
 
-      <div class="content" style="height:100%;">
-
+      <!-- Main Content -->
+      <div class="content" style="height:100%">
         <iron-pages attr-for-selected="data-route" selected="{{route}}" style="height:100%;">
           <section data-route="home" href="{{baseUrl}}" style="height:100%;">
             Welcome
+            <paper-fab raised onclick="dialog.open()" icon="add">open dialog test</paper-fab>
+            <paper-dialog id="dialog">
+              <h2>Dialog Title</h2>
+              <p>Dialog content</p>
+            </paper-dialog>
+          </section>
+
+          <section data-route="home2" href="{{baseUrl}}home2" style="height:100%;">
+            Thie is test page
             <paper-fab raised onclick="dialog.open()" icon="add">open dialog test</paper-fab>
             <paper-dialog id="dialog">
               <h2>Dialog Title</h2>
@@ -186,18 +198,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </paper-scroll-header-panel>
 
             <template is="dom-if" if="{{isAuthorized}}">
-              <!--<paper-fab class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab> -->
               <paper-fab id="createProjectBtn" class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>
             </template>
 
             <!--for test-->
             <!--<paper-fab id="createProjectBtnTest" class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>-->
             <!--for test-->
-            <paper-button raised onclick="dialog2.open()">open dialog test</paper-button>
+            <!-- <paper-button raised onclick="dialog2.open()">open dialog test</paper-button>
             <paper-dialog id="dialog2">
               <h2>Dialog Title</h2>
               <p>Dialog content</p>
-            </paper-dialog>
+            </paper-dialog> -->
 
 
 
@@ -228,6 +239,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           on-error="errorHandler"></iron-ajax>
 
           <paper-toast id="projToast"></paper-toast>
+        </section>
+
+        <!-- LIST OF COMPONENTS OF A PROJECT -->
+        <section data-route="project-info" href="{{baseUrl}}project-info" style="height:100%;">
+          <iron-ajax id="projectInfoLoader"
+                     on-request="sentRequest"
+                     last-response="{{project}}"></iron-ajax>
+
+          <paper-scroll-header-panel id="scrollComponents">
+            <paper-material elevation="1">
+              <div class="editHeader">
+                  <h2>{{project.name}}</h2>
+                  <div>{{project.description}}</div>
+              </div>
+            </paper-material>
+
+            <components-list id="componentsList" loading="{{loading}}"></components-list>
+          </paper-scroll-header-panel>
+
+
+
+
         </section>
 
 
