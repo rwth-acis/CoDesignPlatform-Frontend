@@ -50,7 +50,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <meta name="msapplication-tap-highlight" content="no">
 
 
-  <link rel="stylesheet" href="styles/main.css">
 
 
   <script>
@@ -123,7 +122,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     and all elements should be ready.
   */
   document.addEventListener('WebComponentsReady', function(e) {
-    alert('WebComponentsReady!!! This only fires in Browser does not support HTML Imports');
+    console.log("WebComponentsReady!!! This only fires in Browser does not support HTML Imports");
   });
 
   </script>
@@ -141,6 +140,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </style>
 
   <link rel="import" href="elements/elements.html">
+  <link rel="stylesheet" href="styles/main.css">
+
   <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
 
 
@@ -165,10 +166,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               Co-Design Platform
             </a>
           </div>
+          <template is="dom-if" if="{{isAuthorized}}">
+            <span class="flex"></span>
+            <div class="currentGitHubUser">
+              Welcome! [[currentGitHubUser.login]] Your GitHub email is [[currentGitHubUser.email]]
+            </div>
+          </template>
           <span class="flex"></span>
           <github-signin id="githubSignInBtn" is-authorized="{{isAuthorized}}" scopes="repo" client-id="b6d65034ff402a6e6f4d" server="https://github.com/login/oauth/authorize" base-href={{baseHref}}></github-signin>
         </paper-toolbar>
       </div>
+
+      <iron-ajax
+        id="getCurrentGitHubUser"
+        url="{{baseHref}}/getCurrentGitHubUser"
+        method="GET"
+        headers="{{accessGitHubHeader}}"
+        on-request = "sentRequest"
+        on-error = "errorHandler"
+        verbose
+        last-response="{{currentGitHubUser}}">
+      </iron-ajax>
 
       <!-- Main Content -->
       <div class="content" style="height:100%">
@@ -184,11 +202,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           <section data-route="home2" href="{{baseUrl}}home2" style="height:100%;">
             Thie is test page
-            <paper-fab raised onclick="dialog.open()" icon="add">open dialog test</paper-fab>
-            <paper-dialog id="dialog">
-              <h2>Dialog Title</h2>
-              <p>Dialog content</p>
-            </paper-dialog>
           </section>
 
           <section id="projectsSection" data-route="projects" href="{{baseUrl}}projects" style="height:100%;">
@@ -235,6 +248,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           content-type="application/json"
           method="POST"
           headers="{{header}}"
+          on-request="sentRequest"
           on-response="handleResponseProject"
           on-error="errorHandler"></iron-ajax>
 
@@ -257,6 +271,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             <components-list id="componentsList" loading="{{loading}}"></components-list>
           </paper-scroll-header-panel>
+
+          <template is="dom-if" if="{{isAuthorized}}">
+            <file-upload-widget service-url="https://api.github.com/repos/" header={{accessGitHubHeader}} current-owner={{gitHubOrg}} current-repo={{project.name}} current-githubuser={{currentGitHubUser}}></file-upload-widget>
+          </template>
 
 
 

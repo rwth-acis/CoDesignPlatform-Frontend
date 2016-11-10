@@ -1,0 +1,339 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+
+/* upload file to GitHub directly from frontend */
+
+
+<dom-module id="file-upload-widget">
+  <template>
+
+    <iron-ajax id="ajaxUploadFile"
+        method='PUT'
+        content-type="application/json"
+        on-response="_receiveFileUpload"
+        on-error="_handleError"
+        headers = "{{header}}"
+        verbose
+        loading = "{{_uploadingFile}}">
+    </iron-ajax>
+
+    <style>
+      :host {
+        display: block;
+        box-sizing: border-box;
+      }
+      form {
+        @apply(--layout-vertical);
+      }
+    </style>
+
+    <paper-dialog modal="true" id="file-upload-widget-error-dialog">
+      <h2 id="error-dialog-title">Error</h2>
+      <div id="error-dialog-message">An error occurred. Please try again.</div>
+      <div class="buttons">
+        <paper-button dialog-dismiss>Close</paper-button>
+      </div>
+    </paper-dialog>
+
+    <form is="iron-form" id="fileform" name="uploadForm" on-iron-form-presubmit="_uploadFile">
+      <input label="[[labelFile]]" type="file" name="filecontent" required disabled="[[_uploadingFile]]"/>
+      <input label="[[labelIdentifier]]" type="text" name="identifier" value="{{identifier}}" placeholder="please give a description" required disabled="[[_uploadingFile]]"/>
+      <paper-button on-click="_submitButton" disabled="[[_uploadingFile]]">[[labelUploadButton]]</paper-button>
+    </form>
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'file-upload-widget',
+
+      properties: {
+        /**
+         * The protocol, hostname and port of a las2peer WebConnector in a las2peer network to upload to.
+         */
+        baseUrl: {
+          type: String,
+          //value: 'http://localhost:14580/',
+        },
+        serviceUrl: {
+          type: String,
+          value: '',
+        },
+        /**
+         * The service URL used by this widget. Computed from the base url and service name.
+         * Can be used to simply generate download or view links in the response callback.
+         */
+        // serviceUrl:  {
+        //   type: String,
+        //   computed: '_computeServiceUrl(baseUrl)'
+        // },
+        loginName: {
+          type: String,
+          value: null
+        },
+        loginPassword: {
+          type: String,
+          value: null
+        },
+        loginOidcToken: {
+          type: String,
+          value: null
+        },
+        loginOidcProvider: {
+          type: String,
+          value: null
+        },
+
+        header:{
+
+        },
+
+        currentGithubuser:{
+          type: Object
+        },
+
+        currentOwner:{
+          type: String,
+          value: null
+        },
+        currentRepo:{
+          type: String,
+          value: null
+        },
+
+        /**
+         * The label used for the file select input element.
+         */
+        labelFile: {
+          type: String,
+          value: 'Select a file'
+        },
+        /**
+         * The label used for the identifier input element.
+         *
+         * If set to "" (empty value), the input element is hidden.
+         */
+        labelIdentifier: {
+          type: String,
+          value: 'Description (necessary)'
+        },
+        /**
+         * A string used to identify the file.
+         *
+         * Must not start with a slash, must not end with a slash and must not contain double slashes.
+         *
+         * If empty or null the hashed filename is used as identifier.
+         */
+        identifier: {
+          type: String,
+          value: ''
+        },
+        /**
+         * The label used for the share with group input element.
+         *
+         * If set to "" (empty value), the input element is hidden.
+         */
+        labelShareWithGroup: {
+          type: String,
+          value: ''
+        },
+        /**
+         * A group id to use as owner of the uploaded file. This gives anyone in the group read and write permission to the file. The uploading agent must be member of the given group.
+         */
+        shareWithGroup: {
+          type: String,
+          value: ''
+        },
+        /**
+         * The label used for the description input element.
+         *
+         * If set to "" (empty value), the input element is hidden.
+         */
+        labelDescription: {
+          type: String,
+          value: ''
+        },
+        /**
+         * A description for the file. Same value as in the description input field.
+         */
+        description: {
+          type: String,
+          value: ''
+        },
+        /**
+         * The label used for the "exclude from index" toggle element.
+         *
+         * If set to "" (empty value), the input element is hidden.
+         */
+        labelExcludeFromIndex: {
+          type: String,
+          value: ''
+        },
+        /**
+         * If true, the file is not listed in the global file index listing.
+         */
+        excludeFromIndex: {
+          type: Boolean,
+          value: false
+        },
+        /**
+         * The label used for the upload button.
+         */
+        labelUploadButton: {
+          type: String,
+          value: 'Upload file'
+        },
+        /**
+         * A callback function that is called after an successful upload.
+         *
+         * The service response value is given as only parameter. See service documentation for details.
+         */
+        uploadSuccessCallback: {
+          type: Object,
+          value: null
+        },
+        _requestHeaders: {
+          type: Object,
+          computed: '_computeHeaders(loginName,loginPassword,loginOidcToken,loginOidcProvider)'
+        },
+        _uploadingFile: {
+          type: Boolean,
+          value: false
+        },
+      },
+
+      // Element behavior
+
+      _computeServiceUrl: function(base) {
+        // base: https://api.github.com/repos/
+        //https://api.github.com/repos/:owner/:repo/contents/:path
+        //https://api.github.com/repos/:owner/:repo/contents/:path
+        //base+currentOwner+'/'+currentRepo+'/contents'+path
+        // if (!base.endsWith('/')) {
+        //   base = base + '/';
+        // }
+        // return base + "fileservice";
+      },
+
+      _computeHeaders: function(loginName,loginPassword,loginOidcToken,loginOidcProvider) {
+        var headers = {};
+
+        if (loginName != null && loginPassword != null) {
+          headers["Authorization"] = "Basic " + btoa(loginName + ":" + loginPassword);
+        }
+        else if(loginOidcToken != null) {
+          headers["access_token"] = loginOidcToken;
+
+          if (loginOidcProvider != null) {
+            headers["oidc_provider"] = loginOidcProvider;
+          }
+        }
+
+        return headers;
+      },
+
+      _isSet(val) {
+        if (val) {
+          return true;
+        } else {
+          return false;
+        }
+      },
+
+      _submitButton(event) {
+        Polymer.dom(event).localTarget.parentElement.submit();
+      },
+
+      // Data processing
+
+      _receiveFileUpload(event) {
+        var response = event.target.lastResponse;
+        //this.querySelector('form').reset();
+        this.$.fileform.reset();
+        //document.location.reload(true);
+        console.log("upload successful: committer " + response.commit.name);
+
+        // if (this.uploadSuccessCallback) {
+        //   window[this.uploadSuccessCallback](response);
+        // }
+      },
+
+      // Convert arraybuffer to base64
+      // http://stackoverflow.com/questions/9267899/arraybuffer-to-base64-encoded-string
+      _arrayBufferToBase64: function(buffer) {
+        var binary = '';
+        var bytes = new Uint8Array( buffer );
+        var len = bytes.byteLength;
+        for (var i = 0; i < len; i++) {
+          binary += String.fromCharCode( bytes[ i ] );
+        }
+        return window.btoa( binary );
+      },
+
+
+      // Send requests
+
+      _uploadFile(event) {
+        event.preventDefault();
+        var form = Polymer.dom(event).localTarget;
+        //console.log("form.name:"+form.name);
+        var elements = form.elements;
+        //console.log("elements.length:"+elements.length);
+        // console.log("form.length:"+form.length);
+
+        var fileName = form.elements.filecontent.files[0].name;
+        var message = form.elements["identifier"].value;
+        var reader = new FileReader();
+        var blob = form.elements.filecontent.files[0];
+        reader.readAsArrayBuffer(blob);
+        var that = this;
+
+        reader.onload = function () {
+          var base64Content = that._arrayBufferToBase64(reader.result);
+          that._sendFile(fileName,message,base64Content);
+        }
+      },
+
+      _sendFile: function(fileName,message,fileContent) {
+        var ajaxUploadFile = this.$.ajaxUploadFile;
+        ajaxUploadFile.body = JSON.stringify({
+            "message": message,
+            "content": fileContent
+        });
+        ajaxUploadFile.url = this.serviceUrl+this.currentOwner+'/'+this.currentRepo+'/contents/'+ fileName;
+        console.log("commit request url:"+ajaxUploadFile.url);
+        ajaxUploadFile.generateRequest();
+      },
+
+
+      // Error handling
+
+      _handleError(event) {
+        console.log("commit error" + event.detail);
+        // var errorDialog = document.querySelector('#file-upload-widget-error-dialog');
+        // var errorDialogTitle = errorDialog.querySelector('#error-dialog-title');
+        // var errorDialogMessage = errorDialog.querySelector('#error-dialog-message');
+        //
+        // errorDialogTitle.innerHTML = event.detail.error;
+        // if (event.detail.request.xhr.readyState == 4 && event.detail.request.xhr.status == 0) { // network issues
+        //   errorDialogTitle.innerHTML = 'Network Connection Error';
+        //   errorDialogMessage.innerHTML = 'Could not connect to:<br />' + event.detail.request.url;
+        // }
+        // else {
+        //   console.log(event);
+        //   var response = event.detail.request.response;
+        //   if (response) {
+        //     errorDialogMessage.innerHTML = response.replace(/(?:\r\n|\r|\n)/g, '<br />');
+        //   }
+        //   else {
+        //     errorDialogMessage.innerHTML = 'An error occurred. Please try again.';
+        //     errorDialogMessage.innerHTML = event.detail.request.xhr.response;
+        //   }
+        // }
+        // errorDialog.open();
+      },
+
+    });
+  </script>
+
+</dom-module>

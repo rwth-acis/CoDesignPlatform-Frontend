@@ -1,6 +1,5 @@
 html, body {
   height: 100%;
-  margin: 8px;
 }
 
 paper-scroll-header-panel {
@@ -9,6 +8,12 @@ paper-scroll-header-panel {
 
 paper-toolbar{
   color: #fff;
+}
+
+paper-fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
 }
 
 paper-toolbar paper-icon-button{
@@ -23,6 +28,15 @@ paper-dialog.create {
     margin-bottom: 0px;
     background-color: white;
     max-height: none !important;
+}
+
+paper-material {
+    border-radius: 2px;
+    /*height: 100%;*/
+    padding: 16px 0 16px 0;
+    width: calc(98.66% - 16px);
+    margin: 16px auto;
+    background: white;
 }
 
 :host {

@@ -5,11 +5,13 @@
         <style>
             :host {
                 display: block;
+                padding: 16px;
+
             }
 
             paper-card {
               box-sizing: border-box;
-              margin: 4px;
+              margin: 16px auto;
               --paper-card-header-image: {
                 max-width:200px;
                 max-height:200px;
@@ -40,7 +42,7 @@
 
         <div class ="horizontal">
             <template is="dom-repeat" items="{{components}}">
-                <paper-card image="[[item.download_url]]" alt="[[item.name]]"></div>
+                <paper-card image="[[item.download_url]]" alt="[[item.name]]" class="cyan"></div>
                   <div class="card-content">[[item.name]]</div>
                 </paper-card>
             </template>

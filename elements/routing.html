@@ -50,10 +50,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             console.log("routing.html app.route:"+app.route);
         });
 
-        page('/signin-result', function() {
-            console.log("in signin-result");
-            page.redirect('/signin-result');
-        });
+        // page('/signin-result', function() {
+        //     console.log("in signin-result");
+        //     page.redirect('/signin-result');
+        // });
 
         page('/home2', function() {
           app.route = 'home2';
@@ -72,6 +72,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         page('/projects/:projectName', function(data) {
             app.route = 'project-info';
+            console.log("app.route:"+app.route);
             app.params = data.params;
             app.component = {};
             app.loadProjectInfo(data.params.projectName);
@@ -112,6 +113,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 //            app.$.superToast.text = 'Can\'t find: ' + window.location.href  + '. Please try to reload!';
 //            app.$.superToast.show();
 //            console.log(data);
+            console.log("*:" + data.path);
+
             page(data.path.substring(1));
         });
 

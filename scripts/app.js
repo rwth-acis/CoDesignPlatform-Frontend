@@ -68,7 +68,10 @@
     app.loading = false;
     app.selectedFilter = "active";
     app.list = true;
-    app.header = null;
+    app.header = null; // for access service
+    app.accessGitHubHeader = null; // for access GitHub directly
+    app.currentGitHubUser = null;
+    app.gitHubOrg = "Co-Design-Platform";
 
     app.displayInstalledToast = function() {
         // Check to make sure caching is actually enabled—it won't be in the dev environment.
@@ -91,16 +94,10 @@
     // See https://github.com/Polymer/polymer/issues/1381
     window.addEventListener('WebComponentsReady', function() {
         // imports are loaded and elements have been registered
-        this.i18n = document.querySelector('i18n-msg');
+        //this.i18n = document.querySelector('i18n-msg');
         app.loaded = true;
         console.log("app.js WebComponentsReady");
     });
-
-    // app.addEventListener('HTMLImportsLoaded', function() {
-    //   console.log("app.js HTMLImportsLoaded");
-    //
-    // });
-
 
     document.addEventListener('HTMLImportsLoaded', function() {
         console.log("app.js HTMLImportsLoaded");
@@ -118,29 +115,29 @@
             }
         }
 
-        if (lang === null || lang ===''){
-            switch (navigator.language.substring(0,2)) {
-                case "en":
-                    I18nMsg.lang = 'en';
-                    break;
-                case "de":
-                    I18nMsg.lang = 'de';
-                    break;
-                case "al":
-                    I18nMsg.lang = 'al';
-                    break;
-                case "ro":
-                    I18nMsg.lang = 'ro';
-                    break;
-                default:
-                    I18nMsg.lang = 'en';
-            }
-        } else {
-            I18nMsg.lang = lang;
-        }
-
-        I18nMsg.url = 'locales'; // optionally use custom folder for locales.
-        Platform.performMicrotaskCheckpoint();
+        // if (lang === null || lang ===''){
+        //     switch (navigator.language.substring(0,2)) {
+        //         case "en":
+        //             I18nMsg.lang = 'en';
+        //             break;
+        //         case "de":
+        //             I18nMsg.lang = 'de';
+        //             break;
+        //         case "al":
+        //             I18nMsg.lang = 'al';
+        //             break;
+        //         case "ro":
+        //             I18nMsg.lang = 'ro';
+        //             break;
+        //         default:
+        //             I18nMsg.lang = 'en';
+        //     }
+        // } else {
+        //     I18nMsg.lang = lang;
+        // }
+        //
+        // I18nMsg.url = 'locales'; // optionally use custom folder for locales.
+        //Platform.performMicrotaskCheckpoint();
     });
 
 
@@ -480,25 +477,30 @@
     }
 
     document.addEventListener('github-signin-aware-success', function(e){
-      //
+
         this.access_token = e.detail.access_token; //undefined
         console.log("handleSigninSuccess this.access_token:"+this.access_token);
 
-        // GitHub Authorization Header is set in service (service->GitHub)
-        // but here is ok too?
-        app.header = {Authorization: this.access_token};
-        //this.header='{"Authorization": "' + this.access_token+'"}';
-        //this.header = {authorization: "Bearer " + this.access_token };
+        // header send to backend service
+        app.header = {Authorization: 'token '+this.access_token};
+
+        // header for directly access GitHub api through frontend
+        app.accessGitHubHeader = {Authorization: 'token '+this.access_token};
 
 
-        // this.header = JSON.stringify({
-        //     "Authorization": this.access_token
-        // });
-        console.log("app.header:"+app.header);
-        console.log("app.header.Authorization:"+app.header.Authorization);
-        var request = document.querySelector('#postProjectRequest');
-        console.log("request.headers:"+request.headers);
-        console.log("request.headers.Authorization:"+request.headers.Authorization);
+        // console.log("app.header:"+app.header);
+        // console.log("app.header.Authorization:"+app.header.Authorization);
+        // var request = document.querySelector('#postProjectRequest');
+        // console.log("request.headers:"+request.headers);
+        // console.log("request.headers.Authorization:"+request.headers.Authorization);
+
+        var request = document.querySelector('#getCurrentGitHubUser');
+
+        //request.headers = app.accessGitHubHeader;
+        //request.url = 'https://api.github.com/user';
+
+        request.headers = app.header;
+        request.generateRequest();
 
         //document.getElementById('getUsr').generateRequest();
         if (app.route === "home"){
@@ -534,11 +536,20 @@
     };
 
     app.handleResponseProject = function(data){
-        if (data != null){
+
+        var result = data.detail.response;
+
+        // for debug
+        console.log("JSON.stringify(result):"+JSON.stringify(result));
+
+        if(result.name != null){
             this.$.projectsList.load();
             this.$.projToast.text = 'created';
         } else {
-            this.$.projToast.text = i18n.getMsg('errorCrePrj');
+            //this.$.projToast.text = i18n.getMsg('errorCrePrj');
+            //Failed : HTTP error code : 403, error msg: Forbidden
+            console.log(result.responseMessage);
+            this.$.projToast.text = "Fail to create project.";
         }
         this.$.projToast.open();
     };
@@ -731,6 +742,7 @@
     };
 
     app.errorHandler = function (e, detail){
+        console.log("request error:"+detail.error.message);
         this.$.superToast.text = detail.error.message;
         this.$.superToast.open();
     };
@@ -840,16 +852,6 @@
         }
     };
 
-
-    //  a= function(e) {
-    //   this.access_token = e.detail.access_token
-    //   console.log("github-signin-success: this.access_token:"+this.access_token);
-    //   this.header = {Authorization: this.access_token};
-    //   console.log("this.header:"+this.header);
-    //   if (app.route === "home"){
-    //         page("/projects");
-    //   }
-    // });
 
 
     app.toggleProjects = function () {

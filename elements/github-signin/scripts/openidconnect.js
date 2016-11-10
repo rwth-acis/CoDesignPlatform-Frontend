@@ -127,10 +127,8 @@ OIDC.setProviderInfo = function (p) {
 
     if (typeof p !== 'undefined') {
         for (var i = 0; i < params.length; i++) {
-          //console.log(params[i]);
-          //console.log(typeof p[params[i]]);
             if (typeof p[params[i]] !== 'undefined') {
-                console.log(params[i]+" = "+p[params[i]]);
+                //console.log(params[i]+" = "+p[params[i]]);
                 this[params[i]] = p[params[i]];
             }
         }

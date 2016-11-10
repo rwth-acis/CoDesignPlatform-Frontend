@@ -304,7 +304,6 @@
                 redirect_uri: 'http://localhost:3000/signin-result',
             };
             OIDC.setClientInfo(clientInfo);
-            console.log("this.server:"+this.server);
             var providerInfo = OIDC.discover(this.server);
 
             // set Identity Provider configuration
@@ -329,7 +328,6 @@
             popup.focus();
 
             popup.onload = function() {
-
             };
 
 
@@ -542,7 +540,7 @@ Example with offline:
       attached: function() {
         AuthEngine.attachSigninAware(this);
           console.log("attached: this.haveAskedToken:"+this.haveAskedToken);
-          console.log("baseHref:"+this.baseHref);
+          console.log("window.location.href:"+window.location.href);
           //if ((window.location.href.indexOf("access_token") > 0) || (window.location.href.indexOf("error=access_denied") > 0)) {
           // window here means the popup window with redirect_uri and parameters
           if ((window.location.href.indexOf("code") > 0) && this.haveAskedToken!=true) {
@@ -597,10 +595,10 @@ Example with offline:
           function receiveMessage(event){
             var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
             if (origin !== "http://localhost:3000"){
+              console.log("origin:"+origin);
               return;
             }
             else{
-              console.log("receive message:"+event.data);
               this.codeValue = event.data;
               console.log("this.codeValue:"+this.codeValue);
 
@@ -608,7 +606,7 @@ Example with offline:
               // this.$.getAccessToken doesn't work
               var request = Polymer.dom(this.root).firstElementChild;
               // request should be iron-ajax element
-              console.log("Polymer.dom(this.root).firstElementChild.id:"+request.id);// getAccessToken
+              //console.log("Polymer.dom(this.root).firstElementChild.id:"+request.id);// getAccessToken
               request.generateRequest();
               event.target.removeEventListener('message',receiveMessage);
             }
@@ -622,14 +620,13 @@ Example with offline:
       },
 
       processParams: function(codeValue) {
-        console.log("codeValue in processParams:"+codeValue);
+        //console.log("codeValue in processParams:"+codeValue);
         return {
           code: codeValue
         };
       },
 
       handleTokenResponse: function(data){
-        console.log("data.detail.response:"+data.detail.response);
         this.token = data.detail.response;
         console.log("this.token:"+this.token);
         //localStorage.setItem('github-signin-idtoken', id_token);
