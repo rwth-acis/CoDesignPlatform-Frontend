@@ -72,6 +72,7 @@
     app.accessGitHubHeader = null; // for access GitHub directly
     app.currentGitHubUser = null;
     app.gitHubOrg = "Co-Design-Platform";
+    app.showFileUploadForm = false;
 
     app.displayInstalledToast = function() {
         // Check to make sure caching is actually enabled—it won't be in the dev environment.
@@ -380,6 +381,10 @@
         createDialog.open();
     };
 
+    app.onUploadFileTap = function(e) {
+      app.showFileUploadForm = true;
+    }
+
     app.onCreateComponentTap = function(e) {
         var createDialog = document.getElementById('onCreateDialogTap');
         createDialog.open();
@@ -478,31 +483,21 @@
 
     document.addEventListener('github-signin-aware-success', function(e){
 
-        this.access_token = e.detail.access_token; //undefined
+        this.access_token = e.detail.access_token;
         console.log("handleSigninSuccess this.access_token:"+this.access_token);
 
-        // header send to backend service
+        // set header send to backend service
         app.header = {Authorization: 'token '+this.access_token};
 
-        // header for directly access GitHub api through frontend
+        // set header for directly access GitHub api through frontend
         app.accessGitHubHeader = {Authorization: 'token '+this.access_token};
 
-
-        // console.log("app.header:"+app.header);
-        // console.log("app.header.Authorization:"+app.header.Authorization);
-        // var request = document.querySelector('#postProjectRequest');
-        // console.log("request.headers:"+request.headers);
-        // console.log("request.headers.Authorization:"+request.headers.Authorization);
-
+        // get GitHub user information
         var request = document.querySelector('#getCurrentGitHubUser');
-
-        //request.headers = app.accessGitHubHeader;
-        //request.url = 'https://api.github.com/user';
-
         request.headers = app.header;
         request.generateRequest();
 
-        //document.getElementById('getUsr').generateRequest();
+        // redirect to projects page
         if (app.route === "home"){
             page("/projects");
         }
@@ -897,9 +892,10 @@
     };
 
     function sayHi() {
-        if (app.currentUser != null) {
+        if (app.currentGitHubUser != null) {
             var tst = document.getElementById('superToast');
-            tst.text = i18n.getMsg('welcome') + app.currentUser.firstName;
+            //tst.text = i18n.getMsg('welcome') + app.currentUser.firstName;
+            tst.text = "Welcome " + app.currentGitHubUser.login;
             tst.open();
         }
     }

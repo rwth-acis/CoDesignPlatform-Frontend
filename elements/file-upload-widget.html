@@ -24,6 +24,15 @@
       }
       form {
         @apply(--layout-vertical);
+          position: fixed;
+          bottom: 0px;
+          right: 80px;
+          width: 350px;
+          margin-bottom: 0px;
+          background-color: white;
+          max-height: none !important;
+
+
       }
     </style>
 
@@ -39,6 +48,8 @@
       <input label="[[labelFile]]" type="file" name="filecontent" required disabled="[[_uploadingFile]]"/>
       <input label="[[labelIdentifier]]" type="text" name="identifier" value="{{identifier}}" placeholder="please give a description" required disabled="[[_uploadingFile]]"/>
       <paper-button on-click="_submitButton" disabled="[[_uploadingFile]]">[[labelUploadButton]]</paper-button>
+      <paper-button on-click="_cancelButton" disabled="[[_uploadingFile]]">[[labelCancelButton]]</paper-button>
+
     </form>
 
   </template>
@@ -96,9 +107,15 @@
           type: String,
           value: null
         },
+
         currentRepo:{
           type: String,
           value: null
+        },
+        
+        showFileuploadform:{
+          type: Boolean,
+          notify: true
         },
 
         /**
@@ -183,6 +200,10 @@
           type: String,
           value: 'Upload file'
         },
+        labelCancelButton: {
+          type: String,
+          value: 'Cancel'
+        },
         /**
          * A callback function that is called after an successful upload.
          *
@@ -243,6 +264,9 @@
       _submitButton(event) {
         Polymer.dom(event).localTarget.parentElement.submit();
       },
+      _cancelButton(event){
+        this.showFileuploadform = false;
+      },
 
       // Data processing
 
@@ -252,7 +276,7 @@
         this.$.fileform.reset();
         //document.location.reload(true);
         console.log("upload successful: committer " + response.commit.name);
-
+        this.showFileUploadForm = false;
         // if (this.uploadSuccessCallback) {
         //   window[this.uploadSuccessCallback](response);
         // }

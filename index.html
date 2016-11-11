@@ -193,11 +193,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <iron-pages attr-for-selected="data-route" selected="{{route}}" style="height:100%;">
           <section data-route="home" href="{{baseUrl}}" style="height:100%;">
             Welcome
-            <paper-fab raised onclick="dialog.open()" icon="add">open dialog test</paper-fab>
+            <!-- <paper-fab raised onclick="dialog.open()" icon="add">open dialog test</paper-fab>
             <paper-dialog id="dialog">
               <h2>Dialog Title</h2>
               <p>Dialog content</p>
-            </paper-dialog>
+            </paper-dialog> -->
           </section>
 
           <section data-route="home2" href="{{baseUrl}}home2" style="height:100%;">
@@ -273,7 +273,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </paper-scroll-header-panel>
 
           <template is="dom-if" if="{{isAuthorized}}">
-            <file-upload-widget service-url="https://api.github.com/repos/" header={{accessGitHubHeader}} current-owner={{gitHubOrg}} current-repo={{project.name}} current-githubuser={{currentGitHubUser}}></file-upload-widget>
+            <paper-fab id="uploadFileBtn" class="fabAdd" on-tap="onUploadFileTap" icon="add"></paper-fab>
+          </template>
+
+          <template is="dom-if" if="{{showFileUploadForm}}">
+            <file-upload-widget service-url="https://api.github.com/repos/" header={{accessGitHubHeader}} current-owner={{gitHubOrg}} current-repo={{project.name}} current-githubuser={{currentGitHubUser}} show-fileuploadform={{showFileUploadForm}}></file-upload-widget>
           </template>
 
 
