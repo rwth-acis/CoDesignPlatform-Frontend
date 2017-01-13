@@ -1,7 +1,7 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
 
-<dom-module id="my-projects">
+<dom-module id="projects-list">
   <!-- Defines the element's style and local DOM -->
   <template>
     <style>
@@ -21,12 +21,15 @@
             id="projectsLoader"
             url="{{baseHref}}/projects"
             last-response="{{projects}}"
-            auto
-            loading="{{loading}}">
+            headers="{{ajaxHeader}}"
+            params="{{ajaxParams}}"
+            loading="{{loading}}"
+            on-request="sentRequest"
+            auto>
     </iron-ajax>
 
     <!-- LIST OF PROJECTS -->
-    <div class="layout horizontal center">
+    <!-- <div class="layout horizontal center"> -->
         <template is="dom-if" if="{{!specific}}">
             <template is="dom-repeat" items="{{projects}}" filter="{{searchFilter(filterValue)}}">
                 <paper-card heading="[[item.name]]" on-tap="onProjectTap">
@@ -48,7 +51,7 @@
   <!-- Creates the element's prototype and registers it -->
   <script>
     Polymer({
-      is: 'my-projects',
+      is: 'projects-list',
       properties: {
         projects: {
             type: Array,
@@ -60,16 +63,46 @@
         },
         route: Object,
         baseHref: String,
-        isAuthorized: {
-          type: Boolean,
-          observer:'_isAuthorizedChanged'
+        ajaxParams: Object,
+        orgName:{
+          type: String,
+          notify: true
         },
-
+        accessToken:{
+          type: String
+        }
+        // isAuthorized: {
+        //   type: Boolean,
+        //   observer:'_isAuthorizedChanged'
+        // },
       },
 
+      // attached: function(){
+      //   console.log("project-list baseHref:"+this.baseHref);
+      //   console.log("project-list orgName:"+this.orgName);
+      //
+      //   var parameters = {
+      //         org: this.orgName
+      //       };
+      //
+      //   if(!this.accessToken){
+      //     var header = {Authorization: 'undefined'};
+      //     console.log('undefined header');
+      //   }
+      //   else{
+      //     var header = {Authorization: this.accessToken};
+      //     console.log('has header:' + this.accessToken);
+      //   };
+      //
+      //   this.$.projectsLoader.headers = header;
+      //   this.$.projectsLoader.params = parameters;
+      //   console.log("preojects-list param.org: " + this.$.projectsLoader.params.org);
+      //  this.$.projectsLoader.generateRequest();
+      // },
+
       load: function(){
+        console.log("load call url: " + this.$.projectsLoader.url);
         this.$.projectsLoader.generateRequest();
-        console.log("load call url: "+this.$.projectsLoader.url);
       },
 
       onProjectTap: function (e) {
@@ -77,10 +110,16 @@
           page('/projects/' + model.item.name);
       },
 
-      _isAuthorizedChanged: function(newVal,oldVal){
-        console.log("my-projects.html isAuthorized.oldVal:"+oldVal);
-        console.log("my-projects.html isAuthorized.newVal:"+newVal);
-      }
+      // for debug
+      //_isAuthorizedChanged: function(newVal,oldVal){
+      //   console.log("projects-list.html isAuthorized.oldVal:" + oldVal);
+      //   console.log("projects-list.html isAuthorized.newVal:" + newVal);
+      // },
+
+      // for debug
+      sentRequest: function(e,detail){
+        console.log("make a request detail.request.url:" + detail.request.url);
+      },
 
     });
   </script>

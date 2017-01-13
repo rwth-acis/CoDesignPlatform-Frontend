@@ -539,9 +539,10 @@ Example with offline:
 
       attached: function() {
         AuthEngine.attachSigninAware(this);
-          console.log("attached: this.haveAskedToken:"+this.haveAskedToken);
-          console.log("window.location.href:"+window.location.href);
+          //console.log("attached: this.haveAskedToken:"+this.haveAskedToken);
+          //console.log("window.location.href:"+window.location.href);
           //if ((window.location.href.indexOf("access_token") > 0) || (window.location.href.indexOf("error=access_denied") > 0)) {
+
           // window here means the popup window with redirect_uri and parameters
           if ((window.location.href.indexOf("code") > 0) && this.haveAskedToken!=true) {
               // Restore configuration information

@@ -29,8 +29,10 @@
         <iron-ajax
                 id="componentsLoader"
                 url="{{projectContentsUrl}}"
+                headers="{{ajaxHeader}}"
+                params="{{ajaxParams}}"
                 on-request="sentRequest"
-                last-response="{{components}}"
+                last-Response="{{components}}"
                 loading="{{loading}}"></iron-ajax>
 
       <iron-ajax
@@ -40,9 +42,11 @@
                 last-response="{{treeComponents}}"
                 loading="{{loading}}"></iron-ajax>
 
-        <div class ="horizontal">
+        <div class ="horizontal" >
             <template is="dom-repeat" items="{{components}}">
-                <paper-card image="[[item.download_url]]" alt="[[item.name]]" class="cyan"></div>
+                <paper-card image="[[item.download_url]]" alt="[[item.name]]" class="cyan" on-tap="onComponentTap"></div>
+                <!-- <paper-card alt="[[item.name]]" class="cyan"></div> -->
+                  <!-- <img src = "[[item.download_url]]"> -->
                   <div class="card-content">[[item.name]]</div>
                 </paper-card>
             </template>
@@ -59,8 +63,16 @@
                     projectId: {
                         type: Number
                     },
+                    // ajax attributes initialized in app.js
+                    // e.g. this.$.componentsList.projectContentsUrl
                     projectContentsUrl:{
                       type: String
+                    },
+                    ajaxHeader:{
+                      type: Object
+                    },
+                    ajaxParams:{
+                      type: Object
                     },
                     projectTreeUrl:{
                       type: String
@@ -80,10 +92,19 @@
                     loading: {
                         type: Boolean,
                         notify: true
-                    }
+                    },
+                    projectName:{
+                      type: String
+                    },
+                    selectedComponent:{
+                      type: Object
+                    },
+
+
                 },
 
                 ready: function () {
+
                 },
 
                 computeResourceURL: function (projectId) {
@@ -92,12 +113,28 @@
 
                 onComponentTap: function (e) {
                     var model = e.model;
-                    page('/projects/'+ this.projectId +'/components/' + model.item.id);
+
+                    // for future use in compnent-detail for svg file
+                    var original_download_url = model.item.download_url.replace("rawgit.com","raw.githubusercontent.com");
+                    console.log("model.item.download_url:" + model.item.download_url);
+                    console.log("original_download_url:" + original_download_url);
+
+                    this.selectedComponent = {
+                      name: model.item.name,
+                      download_url: model.item.download_url,
+                      html_url: model.item.html_url,
+                      sha: model.item.sha,
+                      original_download_url: original_download_url
+                    };
+                    //this.selectedComponent = e.model;
+                    page('/projects/'+ this.projectName +'/components/' + model.item.name);
                 },
+
 
                 load: function() {
                     // load the content of the repo, default branch: master
                     // e.g. https://api.github.com/repos/Co-Design-Platform/koala/contents?ref=master
+                    this.projectName = this.$.componentsLoader.params.repo;
                     this.$.componentsLoader.generateRequest();
 
                     // load the master tree of the repo
@@ -108,8 +145,36 @@
 
                 // for debug
                 sentRequest: function(e,detail){
-                  console.log("make a request detail.request.url:"+detail.request.url);
+                  console.log("componenets-list make a request detail.request.url:"+detail.request.url);
                 },
+
+                // the original download_url from GitHub is like:
+                // https://raw.githubusercontent.com/Co-Design-Platform/panda/master/bear.svg
+                // but this svg cannot be shown on browser directly within <img>
+                // because GitHub sends text/plain header
+                // see http://stackoverflow.com/questions/13808020/include-an-svg-hosted-on-github-in-markdown
+                // and https://github.com/isaacs/github/issues/316
+                //
+                // changeComponents: function(array){
+                //   var cLength = array.length;
+                //   console.log("cLength:"+cLength);
+                //
+                //   for (i = 0; i < cLength; i++) {
+                //     var item = this.get(['array', i]);
+                //     console.log("name:"+item.name);
+                //     console.log("download_url:"+item.download_url);
+                //     src = item.download_url;
+                //     var res = src.replace("raw.githubusercontent.com", "cdn.rawgit.com");
+                //     console.log("res:"+res);
+                //     this.components[i].download_url = res;
+                //     this.notifyPath('components[i].download_url');
+                //     console.log("new components.download_url:"+this.components[i].download_url);
+                //   }
+                //
+                //   return components;
+                //
+                // },
+
 
             });
         })();

@@ -127,8 +127,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   </script>
 
-
-
   <style>
   body {
     margin: 0;
@@ -192,7 +190,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <div class="content" style="height:100%">
         <iron-pages attr-for-selected="data-route" selected="{{route}}" style="height:100%;">
           <section data-route="home" href="{{baseUrl}}" style="height:100%;">
-            Welcome
+            <projects-list name="projects" id="projectsList" base-href={{baseHref}} is-authorized={{isAuthorized}} org-name={{gitHubOrg}} access-token={{access_token}} ajax-params={{ajaxParamsGitHubOrg}} ajax-header={{header}}></projects-list>
+
             <!-- <paper-fab raised onclick="dialog.open()" icon="add">open dialog test</paper-fab>
             <paper-dialog id="dialog">
               <h2>Dialog Title</h2>
@@ -200,29 +199,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </paper-dialog> -->
           </section>
 
-          <section data-route="home2" href="{{baseUrl}}home2" style="height:100%;">
-            Thie is test page
-          </section>
 
           <section id="projectsSection" data-route="projects" href="{{baseUrl}}projects" style="height:100%;">
 
             <paper-scroll-header-panel id="scrollProjects" class="flex">
-              <my-projects name="projects" id="projectsList" base-href={{baseHref}} is-authorized={{isAuthorized}}></my-projects>
+              <projects-list name="projects" id="projectsList" base-href={{baseHref}} is-authorized={{isAuthorized}} org-name={{gitHubOrg}} access-token={{access_token}} ajax-params={{ajaxParamsGitHubOrg}} ajax-header={{header}}></projects-list>
             </paper-scroll-header-panel>
 
             <template is="dom-if" if="{{isAuthorized}}">
               <paper-fab id="createProjectBtn" class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>
             </template>
-
-            <!--for test-->
-            <!--<paper-fab id="createProjectBtnTest" class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>-->
-            <!--for test-->
-            <!-- <paper-button raised onclick="dialog2.open()">open dialog test</paper-button>
-            <paper-dialog id="dialog2">
-              <h2>Dialog Title</h2>
-              <p>Dialog content</p>
-            </paper-dialog> -->
-
 
 
             <!-- Dialog: CREATE NEW PROJECT -->
@@ -242,15 +228,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </paper-dialog>
 
           <iron-ajax
-          id="postProjectRequest"
-          handle-as="json"
-          url="{{baseHref}}/createproject"
-          content-type="application/json"
-          method="POST"
-          headers="{{header}}"
-          on-request="sentRequest"
-          on-response="handleResponseProject"
-          on-error="errorHandler"></iron-ajax>
+              id="postProjectRequest"
+              handle-as="json"
+              url="{{baseHref}}/createproject"
+              content-type="application/json"
+              method="POST"
+              headers="{{header}}"
+              on-request="sentRequest"
+              on-response="handleResponseProject"
+              on-error="errorHandler">
+          </iron-ajax>
 
           <paper-toast id="projToast"></paper-toast>
         </section>
@@ -259,7 +246,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <section data-route="project-info" href="{{baseUrl}}project-info" style="height:100%;">
           <iron-ajax id="projectInfoLoader"
                      on-request="sentRequest"
-                     last-response="{{project}}"></iron-ajax>
+                     last-response="{{project}}">
+          </iron-ajax>
 
           <paper-scroll-header-panel id="scrollComponents">
             <paper-material elevation="1">
@@ -270,20 +258,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </paper-material>
 
             <components-list id="componentsList" loading="{{loading}}"></components-list>
+
           </paper-scroll-header-panel>
 
           <template is="dom-if" if="{{isAuthorized}}">
             <paper-fab id="uploadFileBtn" class="fabAdd" on-tap="onUploadFileTap" icon="add"></paper-fab>
           </template>
-
           <template is="dom-if" if="{{showFileUploadForm}}">
+            <!--for upload via frontend
             <file-upload-widget service-url="https://api.github.com/repos/" header={{accessGitHubHeader}} current-owner={{gitHubOrg}} current-repo={{project.name}} current-githubuser={{currentGitHubUser}} show-fileuploadform={{showFileUploadForm}}></file-upload-widget>
+            -->
+            <file-upload-widget base-href={{baseHref}} service-url="https://api.github.com/repos/" access-token={{access_token}} current-owner={{gitHubOrg}} current-repo={{project.name}} current-githubuser={{currentGitHubUser}} show-fileuploadform={{showFileUploadForm}}></file-upload-widget>
           </template>
+        </section>
 
+        <!-- SIGNLE COMPONENTS OF A PROJECT -->
+        <section data-route="component-info" href="{{baseUrl}}component-info" style="height:100%;">
+          <component-detail id="componentDetail" base-href={{baseHref}} is-authorized={{isAuthorized}}></component-detail>
 
+          <template is="dom-if" if="{{isAuthorized}}">
+            <paper-fab id="updateFileBtn" class="fabAdd" on-tap="onUpdateFileTap" icon="add"></paper-fab>
+          </template>
+          <!-- <template id="updateFile" is="dom-if" if="{{showFileUpdateForm}}">
+            <file-upload-widget id="updateFileWidget" base-href={{baseHref}} service-url="https://api.github.com/repos/" access-token={{access_token}} current-owner={{gitHubOrg}} current-repo={{project.name}} current-githubuser={{currentGitHubUser}} show-fileupdateform={{showFileUpdateForm}}></file-upload-widget>
+          </template> -->
 
 
         </section>
+
 
 
       </iron-pages>

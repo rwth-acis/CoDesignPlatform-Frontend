@@ -65,6 +65,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         page('/projects', function() {
             app.route = 'projects';
+            console.log("app.route:"+app.route);
             app.scrollProjToTop();
             app.component = {};
         });
@@ -78,14 +79,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             app.loadProjectInfo(data.params.projectName);
         });
 
-        page('/projects/:projectId/components/:componentId', function(data) {
-            if (app.compChanged(data.params.componentId)){
-                app.route = 'component-info';
-                app.params = data.params;
-                app.selectedFilter = "active";
-                app.loadComponentInfo(data.params.componentId);
-                app.closeCollapses();
-            }
+        page('/projects/:projectName/components/:componentName', function(data) {
+            //if (app.compChanged(data.params.componentId)){
+            //     app.route = 'component-info';
+            //     app.params = data.params;
+            //     app.selectedFilter = "active";
+            //     app.loadComponentInfo(data.params.componentId);
+            //     app.closeCollapses();
+            // }
+               app.route = 'component-info';
+               console.log("app.route:"+app.route);
+               console.log("data.params.projectName:"+data.params.projectName);
+               console.log("data.params.componentName:"+data.params.componentName);
+               //console.log("data.params.componentUrl:"+data.params.componentUrl);
+               app.params = data.params;
+               app.loadComponent();
+
         });
 
         page('/projects/:projectId/components/:componentId/create', function(data) {
@@ -120,7 +129,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         //add #! before urls
         page({
-            hashbang: false
+            hashbang: true
         });
 
 //   });

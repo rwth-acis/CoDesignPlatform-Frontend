@@ -15,7 +15,30 @@
         headers = "{{header}}"
         verbose
         loading = "{{_uploadingFile}}">
+    <!-- </iron-ajax> -->
+
+    <iron-ajax
+        id="postFileRequest"
+        handle-as="json"
+        url="{{baseHref}}/createfile"
+        content-type="application/json"
+        method="POST"
+        on-request="_sentRequest"
+        on-response="_receiveFileUpload2"
+        on-error="_handleError">
     </iron-ajax>
+
+    <iron-ajax
+        id="updateFileRequest"
+        handle-as="json"
+        url="{{baseHref}}/updatefile"
+        content-type="application/json"
+        method="POST"
+        on-request="_sentRequest"
+        on-response="_receiveFileUpload2"
+        on-error="_handleError">
+    </iron-ajax>
+
 
     <style>
       :host {
@@ -49,8 +72,18 @@
       <input label="[[labelIdentifier]]" type="text" name="identifier" value="{{identifier}}" placeholder="please give a description" required disabled="[[_uploadingFile]]"/>
       <paper-button on-click="_submitButton" disabled="[[_uploadingFile]]">[[labelUploadButton]]</paper-button>
       <paper-button on-click="_cancelButton" disabled="[[_uploadingFile]]">[[labelCancelButton]]</paper-button>
-
     </form>
+
+
+
+  <!-- <template is="dom-if" if="{{showFileUpdateForm}}"> -->
+    <!-- <form is="iron-form" id="updatefileform" name="updateForm" on-iron-form-presubmit="_updateFile">
+      <input label="[[labelFile]]" type="file" name="filecontent" required disabled="[[_uploadingFile]]"/>
+      <input label="[[labelIdentifier]]" type="text" name="identifier" value="{{identifier}}" placeholder="please give a description" required disabled="[[_uploadingFile]]"/>
+      <paper-button on-click="_submitButton" disabled="[[_uploadingFile]]">[[labelUpdateButton]]</paper-button>
+      <paper-button on-click="_cancelButton" disabled="[[_uploadingFile]]">[[labelCancelButton]]</paper-button>
+    </form> -->
+  <!-- </template> -->
 
   </template>
 
@@ -96,7 +129,8 @@
         },
 
         header:{
-
+          type:String,
+          value:null
         },
 
         currentGithubuser:{
@@ -112,10 +146,24 @@
           type: String,
           value: null
         },
-        
-        showFileuploadform:{
+
+        showFileUploadForm:{
           type: Boolean,
           notify: true
+        },
+
+        showFileupdateform:{
+          type: Boolean,
+          notify: true
+        },
+
+        accessToken:{
+          type: String,
+          value: null
+        },
+
+        updateSha:{
+          type: String
         },
 
         /**
@@ -204,6 +252,12 @@
           type: String,
           value: 'Cancel'
         },
+        labelUpdateButton: {
+          type: String,
+          value: 'Update file'
+        },
+
+
         /**
          * A callback function that is called after an successful upload.
          *
@@ -282,6 +336,19 @@
         // }
       },
 
+      _receiveFileUpload2(event) {
+        var response = event.target.lastResponse;
+        //this.querySelector('form').reset();
+        this.$.fileform.reset();
+        //document.location.reload(true);
+        console.log("upload response:"+response);
+        this.showFileUploadForm = false;
+        document.location.reload(true);
+        // if (this.uploadSuccessCallback) {
+        //   window[this.uploadSuccessCallback](response);
+        // }
+      },
+
       // Convert arraybuffer to base64
       // http://stackoverflow.com/questions/9267899/arraybuffer-to-base64-encoded-string
       _arrayBufferToBase64: function(buffer) {
@@ -296,7 +363,6 @@
 
 
       // Send requests
-
       _uploadFile(event) {
         event.preventDefault();
         var form = Polymer.dom(event).localTarget;
@@ -314,10 +380,38 @@
 
         reader.onload = function () {
           var base64Content = that._arrayBufferToBase64(reader.result);
-          that._sendFile(fileName,message,base64Content);
+          //that._sendFile(fileName,message,base64Content);
+          that._sendFile2(fileName,message,base64Content);
         }
       },
 
+
+      _updateFile(event) {
+        event.preventDefault();
+        var form = Polymer.dom(event).localTarget;
+        //console.log("form.name:"+form.name);
+        var elements = form.elements;
+        //console.log("elements.length:"+elements.length);
+        // console.log("form.length:"+form.length);
+
+        var fileName = form.elements.filecontent.files[0].name;
+        var message = form.elements["identifier"].value;
+        var reader = new FileReader();
+        var blob = form.elements.filecontent.files[0];
+        reader.readAsArrayBuffer(blob);
+        var that = this;
+
+        updateSha = "c298c3e71be513e979ee230d9a714c80c4b25b46";
+
+
+        reader.onload = function () {
+          var base64Content = that._arrayBufferToBase64(reader.result);
+          //that._sendFile(fileName,message,base64Content);
+          that.sendUpdateFile(fileName,message,updateSha,base64Content);
+        }
+      },
+
+      // send file via frondend
       _sendFile: function(fileName,message,fileContent) {
         var ajaxUploadFile = this.$.ajaxUploadFile;
         ajaxUploadFile.body = JSON.stringify({
@@ -327,6 +421,72 @@
         ajaxUploadFile.url = this.serviceUrl+this.currentOwner+'/'+this.currentRepo+'/contents/'+ fileName;
         console.log("commit request url:"+ajaxUploadFile.url);
         ajaxUploadFile.generateRequest();
+
+      },
+
+      // send file via backend service to GitHub
+      _sendFile2: function(fileName,message,fileContent) {
+        var postFile = this.$.postFileRequest;
+        var header = {Authorization: this.accessToken};
+        // console.log("accessToken:"+this.accessToken);
+        // console.log("header:"+header);
+        // console.log("header:"+header.Authorization);
+        var parameters = {
+              org: this.currentOwner,
+              repo: this.currentRepo,
+              path:fileName,
+            };
+        postFile.headers = header;
+        postFile.params = parameters;
+        postFile.body = JSON.stringify({
+            "message": message,
+            "content": fileContent
+        });
+        postFile.generateRequest();
+      },
+
+      // update file via backend service to GitHub
+      sendUpdateFile: function(fileName,message,sha,fileContent) {
+        var updateFile = this.$.updateFileRequest;
+        var header = {Authorization: this.accessToken};
+        // console.log("accessToken:"+this.accessToken);
+        // console.log("header:"+header);
+        // console.log("header:"+header.Authorization);
+        var parameters = {
+              org: this.currentOwner,
+              repo: this.currentRepo,
+              path: fileName,
+            };
+        updateFile.headers = header;
+        updateFile.params = parameters;
+        updateFile.body = JSON.stringify({
+            "sha": sha,
+            "message": message,
+            "content": fileContent
+        });
+        updateFile.generateRequest();
+      },
+
+      // send file via backend service to GitHub
+      _sendFile3: function(fileName,message,fileContent) {
+        var postFile = this.$.postFileRequest;
+        var header = {Authorization: this.accessToken};
+        console.log("accessToken:"+this.accessToken);
+        console.log("header:"+header);
+        console.log("header:"+header.Authorization);
+        var parameters = {
+              org: this.currentOwner,
+              repo: this.currentRepo,
+              path:fileName,
+              msg:message
+            };
+        postFile.headers = header;
+        postFile.params = parameters;
+        // postFile.body = JSON.stringify{
+        //   "content": fileContent
+        // }
+        postFile.body = fileContent;
+        postFile.generateRequest();
       },
 
 
@@ -356,6 +516,13 @@
         // }
         // errorDialog.open();
       },
+
+      // for debug
+      _sentRequest: function(e,detail){
+        console.log("make a request detail.request.url:"+detail.request.url);
+        //console.log("make a request detail.request.url:"+detail.request.headers.Authorization);
+      },
+
 
     });
   </script>

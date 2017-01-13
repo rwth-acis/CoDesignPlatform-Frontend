@@ -59,7 +59,8 @@
      * @type {boolean}
      */
     app.isAuthorized = false;
-    app.access_token = null;
+    //app.access_token = null;
+    app.access_token = "undefined";
     app.hresponse = null;
     app.currentUser = null;
     app.compResponse = null;
@@ -68,10 +69,11 @@
     app.loading = false;
     app.selectedFilter = "active";
     app.list = true;
-    app.header = null; // for access service
+    app.header = {Authorization: app.access_token}; // for access service
     app.accessGitHubHeader = null; // for access GitHub directly
     app.currentGitHubUser = null;
     app.gitHubOrg = "Co-Design-Platform";
+    app.ajaxParamsGitHubOrg = {org: app.gitHubOrg};
     app.showFileUploadForm = false;
 
     app.displayInstalledToast = function() {
@@ -240,22 +242,55 @@
     };
 
     /**
-     * Loads the project info page.
+     * Loads the project info page and the components in the master branch
      *
-     * @param projectId the id of the project to load.
+     * @param projectName the name of the project to load.
      */
     app.loadProjectInfo = function(projectName) {
-        //https://api.github.com/repos/Co-Design-Platform/koala
-        var projectUrl = 'https://api.github.com/repos/Co-Design-Platform/'+projectName;
-        this.$.projectInfoLoader.url = projectUrl;
+
+        var projectInfoUrl = this.baseHref + '/projectinfo';
+        this.$.projectInfoLoader.url = projectInfoUrl;
+        console.log("projectInfoUrl:" + projectInfoUrl);
+
+        this.$.projectInfoLoader.headers = app.header;
+
+        var parameters = {
+              org: app.gitHubOrg,
+              repo: projectName,
+            };
+        this.$.projectInfoLoader.params = parameters;
         this.$.projectInfoLoader.generateRequest();
 
         // load the components of the project
-        this.$.componentsList.projectContentsUrl = projectUrl+'/contents?ref=master';
-        this.$.componentsList.projectTreeUrl= projectUrl+'/git/trees/master';
+        var componentsListAjaxParams = {
+              org: app.gitHubOrg,
+              repo: projectName,
+              branch: 'master'
+            };
+        this.$.componentsList.projectContentsUrl = this.baseHref+'/components';
+        this.$.componentsList.ajaxHeader = app.header;
+        this.$.componentsList.ajaxParams = componentsListAjaxParams;
+        // this.$.componentsList.projectTreeUrl= projectInfoUrl+'/git/trees/master';
         this.$.componentsList.load();
 
+    };
 
+    //load a single component
+    app.loadComponent = function(){
+
+      var name = this.$.componentsList.selectedComponent.name;
+      var componentUrl = this.$.componentsList.selectedComponent.download_url;
+      var componentSha = this.$.componentsList.selectedComponent.sha;
+      var htmlUrl = this.$.componentsList.selectedComponent.html_url;
+      var original_download_url=  this.$.componentsList.selectedComponent.original_download_url;
+
+      this.$.componentDetail.componentName = name;
+      this.$.componentDetail.componentUrl = componentUrl;
+      this.$.componentDetail.componentSha = componentSha;
+      this.$.componentDetail.htmlUrl = htmlUrl;
+      this.$.componentDetail.originalDownloadUrl = original_download_url;
+
+      this.$.componentDetail.load();
     };
 
     // for debug
@@ -383,6 +418,13 @@
 
     app.onUploadFileTap = function(e) {
       app.showFileUploadForm = true;
+      console.log("app.showFileUploadForm:"+app.showFileUploadForm);
+    };
+
+    app.onUpdateFileTap = function(e) {
+      //var sha = this.$.componentsList.selectedComponent.sha;
+      app.showFileUpdateForm = true;
+      // this.$.updateFile.updateFileSha = sha;
     }
 
     app.onCreateComponentTap = function(e) {
@@ -485,9 +527,10 @@
 
         this.access_token = e.detail.access_token;
         console.log("handleSigninSuccess this.access_token:"+this.access_token);
+        app.access_token = this.access_token;
 
         // set header send to backend service
-        app.header = {Authorization: 'token '+this.access_token};
+        app.header = {Authorization: this.access_token};
 
         // set header for directly access GitHub api through frontend
         app.accessGitHubHeader = {Authorization: 'token '+this.access_token};
@@ -499,12 +542,13 @@
 
         // redirect to projects page
         if (app.route === "home"){
-            page("/projects");
+           page("/projects");
         }
         window.setTimeout(sayHi,500);
     });
 
 
+    // to create a new repository on GitHub
     app.onCreateProjectClosed = function(e) {
       // iron-overlay-closed event
       // event.detail is the closingReason property
@@ -539,6 +583,7 @@
 
         if(result.name != null){
             this.$.projectsList.load();
+            console.log("this.$.projectsList.load()");
             this.$.projToast.text = 'created';
         } else {
             //this.$.projToast.text = i18n.getMsg('errorCrePrj');

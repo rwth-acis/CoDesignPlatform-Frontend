@@ -1,0 +1,169 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<dom-module id="component-detail">
+    <template>
+        <style>
+            :host {
+                display: block;
+                padding: 16px;
+
+            }
+
+            paper-card {
+              box-sizing: border-box;
+              margin: 16px auto;
+              --paper-card-header-image: {
+                max-width:200px;
+                max-height:200px;
+              };
+              --paper-card-content:{
+                color: var(--google-blue-500);
+              };
+            }
+
+            paper-card:hover {
+                background-color: var(--list-hover-background-color);
+            }
+        </style>
+
+
+        <p>{{componentUrl}}</p>
+        <p>{{htmlUrl}}</p>
+        <p>{{componentSha}}</p>
+        <!-- <canvas id="canvas1" width="400" height="400"></canvas> -->
+        <iron-ajax
+                id="svgContentLoader"
+                url="{{baseHref}}\getsvgcontent"
+                handle-as="xml"
+                on-request="sentRequest"
+                on-response="handleResponse"
+                loading="{{loading}}">
+        </iron-ajax>
+        <div id="svgContent"></div>
+
+    </template>
+
+    <script>
+        (function () {
+//            'use strict';
+
+            Polymer({
+                is: 'component-detail',
+                properties: {
+                    projectId: {
+                        type: Number
+                    },
+                    projectContentsUrl:{
+                      type: String
+                    },
+                    ajaxParams:{
+                      type: Object
+                    },
+                    projectTreeUrl:{
+                      type: String
+                    },
+                    resourceURL: {
+                        type: String,
+                        computed: 'computeResourceURL(projectId)'
+                    },
+                    components: {
+                        type: Array,
+                        notify: true
+                    },
+                    treeComponents: {
+                        type: Array,
+                        notify: true
+                    },
+                    loading: {
+                        type: Boolean,
+                        notify: true
+                    },
+                    projectName:{
+                      type: String
+                    },
+                    isAuthorized:{
+                      type: String
+                    },
+                    showFileUpdateForm:{
+                      type: Boolean,
+                      notify: true
+                    },
+                    componentName:{
+                      type: String
+                    },
+                    componentUrl:{
+                      type: String
+                    },
+                    componentSha:{
+                      type: String
+                    },
+                    htmlUrl:{
+                      type: String
+                    },
+                    originalDownloadUrl:{
+                      type: String
+                    },
+                },
+
+                ready: function () {
+
+                },
+
+                computeResourceURL: function (projectId) {
+                    return app.baseHref + '/projects/' + projectId + '/components/';
+                },
+
+                onComponentTap: function (e) {
+                    var model = e.model;
+                    page('/projects/'+ this.projectName +'/components/' + model.item.name);
+                },
+                // onProjectTap: function (e) {
+                //     var model = e.model;
+                //     page('/projects/' + model.item.name);
+                // },
+
+                load: function() {
+
+                  //http://stackoverflow.com/questions/3768565/drawing-a-svg-file-on-a-html5-canvas
+                  // var can = this.$.canvas1;
+                  // var ctx = can.getContext('2d');
+                  // var img = new Image();
+                  // img.onload = function() {
+                  //   ctx.drawImage(img, 0, 0);
+                  // }
+                  // img.src = componentUrl;
+//
+                  this.$.svgContentLoader.params = {svgurl: this.originalDownloadUrl};
+                  this.$.svgContentLoader.generateRequest();
+                },
+//
+                onUpdateFileTap: function(e) {
+                  //var sha = this.$.componentsList.selectedComponent.sha;
+                  this.showFileUpdateForm = true;
+                  //this.$.updateFile.updateFileSha = componentSha;
+                },
+
+                // for debug
+                sentRequest: function(e,detail){
+                  console.log("componenets-list make a request detail.request.url:"+detail.request.url);
+                },
+
+                handleResponse: function(event){
+                  console.log("_handleResponse... ");
+                  console.log(event.detail.response);
+                  response = event.detail.response; // it is xml format
+                  //svgResult = response.querySelectorAll('svg');
+                  var svgText = new XMLSerializer().serializeToString(response); // from xml to string
+                  this.$.svgContent.innerHTML = svgText;
+                },
+
+
+
+
+
+
+            });
+        })();
+    </script>
+
+</dom-module>
