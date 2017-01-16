@@ -1,183 +1,427 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+
 
 <dom-module id="components-list">
-    <template>
-        <style>
-            :host {
-                display: block;
-                padding: 16px;
+  <template>
+  <style>
+  :host {
+    display: block;
+    padding: 16px;
+    box-sizing: border-box;
 
-            }
+  }
 
-            paper-card {
-              box-sizing: border-box;
-              margin: 16px auto;
-              --paper-card-header-image: {
-                max-width:200px;
-                max-height:200px;
-              };
-              --paper-card-content:{
-                color: var(--google-blue-500);
-              };
-            }
+  form {
+    @apply(--layout-vertical);
+    position: fixed;
+    bottom: 0px;
+    right: 80px;
+    width: 350px;
+    margin-bottom: 0px;
+    background-color: white;
+    max-height: none !important;
+  }
 
-            paper-card:hover {
-                background-color: var(--list-hover-background-color);
-            }
-        </style>
+  paper-card {
+    box-sizing: border-box;
+    margin: 16px auto;
+    --paper-card-header-image: {
+      max-width:200px;
+      max-height:200px;
+    };
+    --paper-card-content:{
+      color: var(--google-blue-500);
+    };
+  }
 
-        <iron-ajax
-                id="componentsLoader"
-                url="{{projectContentsUrl}}"
-                headers="{{ajaxHeader}}"
-                params="{{ajaxParams}}"
-                on-request="sentRequest"
-                last-Response="{{components}}"
-                loading="{{loading}}"></iron-ajax>
+  paper-card:hover {
+    background-color: var(--list-hover-background-color);
+  }
 
-      <iron-ajax
-                id="treeLoader"
-                url="{{projectTreeUrl}}"
-                on-request="sentRequest"
-                last-response="{{treeComponents}}"
-                loading="{{loading}}"></iron-ajax>
+  paper-fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+  }
+  </style>
 
-        <div class ="horizontal" >
-            <template is="dom-repeat" items="{{components}}">
-                <paper-card image="[[item.download_url]]" alt="[[item.name]]" class="cyan" on-tap="onComponentTap"></div>
-                <!-- <paper-card alt="[[item.name]]" class="cyan"></div> -->
-                  <!-- <img src = "[[item.download_url]]"> -->
-                  <div class="card-content">[[item.name]]</div>
-                </paper-card>
-            </template>
-        </div>
-    </template>
+  <iron-ajax
+  id="componentsLoader"
+  url="{{projectContentsUrl}}"
+  headers="{{ajaxHeader}}"
+  params="{{ajaxParams}}"
+  on-request="sentRequest"
+  last-Response="{{components}}"
+  loading="{{loading}}"></iron-ajax>
 
-    <script>
-        (function () {
-//            'use strict';
-
-            Polymer({
-                is: 'components-list',
-                properties: {
-                    projectId: {
-                        type: Number
-                    },
-                    // ajax attributes initialized in app.js
-                    // e.g. this.$.componentsList.projectContentsUrl
-                    projectContentsUrl:{
-                      type: String
-                    },
-                    ajaxHeader:{
-                      type: Object
-                    },
-                    ajaxParams:{
-                      type: Object
-                    },
-                    projectTreeUrl:{
-                      type: String
-                    },
-                    resourceURL: {
-                        type: String,
-                        computed: 'computeResourceURL(projectId)'
-                    },
-                    components: {
-                        type: Array,
-                        notify: true
-                    },
-                    treeComponents: {
-                        type: Array,
-                        notify: true
-                    },
-                    loading: {
-                        type: Boolean,
-                        notify: true
-                    },
-                    projectName:{
-                      type: String
-                    },
-                    selectedComponent:{
-                      type: Object
-                    },
+  <iron-ajax
+  id="treeLoader"
+  url="{{projectTreeUrl}}"
+  on-request="sentRequest"
+  last-response="{{treeComponents}}"
+  loading="{{loading}}"></iron-ajax>
 
 
-                },
-
-                ready: function () {
-
-                },
-
-                computeResourceURL: function (projectId) {
-                    return app.baseHref + '/projects/' + projectId + '/components/';
-                },
-
-                onComponentTap: function (e) {
-                    var model = e.model;
-
-                    // for future use in compnent-detail for svg file
-                    var original_download_url = model.item.download_url.replace("rawgit.com","raw.githubusercontent.com");
-                    console.log("model.item.download_url:" + model.item.download_url);
-                    console.log("original_download_url:" + original_download_url);
-
-                    this.selectedComponent = {
-                      name: model.item.name,
-                      download_url: model.item.download_url,
-                      html_url: model.item.html_url,
-                      sha: model.item.sha,
-                      original_download_url: original_download_url
-                    };
-                    //this.selectedComponent = e.model;
-                    page('/projects/'+ this.projectName +'/components/' + model.item.name);
-                },
+  <iron-ajax
+  id="postFileRequest"
+  handle-as="json"
+  url="{{baseHref}}/createfile"
+  content-type="application/json"
+  method="POST"
+  on-request="sentRequest"
+  on-response="receiveFileUpload"
+  on-error="handleError">
+</iron-ajax>
 
 
-                load: function() {
-                    // load the content of the repo, default branch: master
-                    // e.g. https://api.github.com/repos/Co-Design-Platform/koala/contents?ref=master
-                    this.projectName = this.$.componentsLoader.params.repo;
-                    this.$.componentsLoader.generateRequest();
 
-                    // load the master tree of the repo
-                    // e.g. https://api.github.com/repos/Co-Design-Platform/koala/git/trees/master
-
-
-                },
-
-                // for debug
-                sentRequest: function(e,detail){
-                  console.log("componenets-list make a request detail.request.url:"+detail.request.url);
-                },
-
-                // the original download_url from GitHub is like:
-                // https://raw.githubusercontent.com/Co-Design-Platform/panda/master/bear.svg
-                // but this svg cannot be shown on browser directly within <img>
-                // because GitHub sends text/plain header
-                // see http://stackoverflow.com/questions/13808020/include-an-svg-hosted-on-github-in-markdown
-                // and https://github.com/isaacs/github/issues/316
-                //
-                // changeComponents: function(array){
-                //   var cLength = array.length;
-                //   console.log("cLength:"+cLength);
-                //
-                //   for (i = 0; i < cLength; i++) {
-                //     var item = this.get(['array', i]);
-                //     console.log("name:"+item.name);
-                //     console.log("download_url:"+item.download_url);
-                //     src = item.download_url;
-                //     var res = src.replace("raw.githubusercontent.com", "cdn.rawgit.com");
-                //     console.log("res:"+res);
-                //     this.components[i].download_url = res;
-                //     this.notifyPath('components[i].download_url');
-                //     console.log("new components.download_url:"+this.components[i].download_url);
-                //   }
-                //
-                //   return components;
-                //
-                // },
+<div class ="horizontal" >
+  <template is="dom-repeat" items="{{components}}">
+    <paper-card image="[[item.download_url]]" alt="[[item.name]]" class="cyan" on-tap="onComponentTap"></div>
+      <!-- <paper-card alt="[[item.name]]" class="cyan"></div> -->
+      <!-- <img src = "[[item.download_url]]"> -->
+      <div class="card-content">[[item.name]]</div>
+    </paper-card>
+  </template>
+</div>
 
 
-            });
-        })();
-    </script>
+<template is="dom-if" if="{{isAuthorized}}">
+  <paper-fab id="uploadFileBtn" class="fabAdd" on-tap="onUploadFileTap" icon="add"></paper-fab>
+</template>
+<template is="dom-if" if="{{showFileUploadForm}}">
+  <form is="iron-form" id="fileform" name="uploadForm" on-iron-form-presubmit="uploadFile">
+    <input label="[[labelFile]]" type="file" name="filecontent" required disabled="[[_uploadingFile]]"/>
+    <input label="[[labelIdentifier]]" type="text" name="identifier" value="{{identifier}}" placeholder="please give a description" required disabled="[[_uploadingFile]]"/>
+    <paper-bon on-click="_submitButton" disabled="[[_uploadingFile]]">[[labelUploadButton]]</paper-button>
+    <paper-button on-click="_cancelButton" disabled="[[_uploadingFile]]">[[labelCancelButton]]</paper-button>
+    <!-- <paper-button id="testButton" on-click="_testButton" disabled="[[_uploadingFile]]">[[labelTestButton]]</paper-button> -->
+  </form>
+</template>
+
+<paper-toast id="toast" text=""></paper-toast>
+
+</template>
+
+<script>
+(function () {
+  //            'use strict';
+
+  Polymer({
+    is: 'components-list',
+    properties: {
+      projectId: {
+        type: Number
+      },
+      isAuthorized:{
+        type: Boolean
+      },
+      accessToken:{
+        type: String,
+      },
+      showFileUploadForm:{
+        type: Boolean
+      },
+      // ajax attributes initialized in app.js
+      // e.g. this.$.componentsList.projectContentsUrl
+      projectContentsUrl:{
+        type: String
+      },
+      ajaxHeader:{
+        type: Object
+      },
+      ajaxParams:{
+        type: Object
+      },
+      projectTreeUrl:{
+        type: String
+      },
+      resourceURL: {
+        type: String,
+        computed: 'computeResourceURL(projectId)'
+      },
+      components: {
+        type: Array,
+        notify: true
+      },
+      treeComponents: {
+        type: Array,
+        notify: true
+      },
+      loading: {
+        type: Boolean,
+        notify: true
+      },
+      projectName:{
+        type: String
+      },
+      selectedComponent:{
+        type: Object
+      },
+
+      /**
+      * The label used for the file select input element.
+      */
+      labelFile: {
+        type: String,
+        value: 'Select a file'
+      },
+      /**
+      * The label used for the identifier input element.
+      *
+      * If set to "" (empty value), the input element is hidden.
+      */
+      labelIdentifier: {
+        type: String,
+        value: 'Description (necessary)'
+      },
+      /**
+      * A string used to identify the file.
+      *
+      * Must not start with a slash, must not end with a slash and must not contain double slashes.
+      *
+      * If empty or null the hashed filename is used as identifier.
+      */
+      identifier: {
+        type: String,
+        value: ''
+      },
+      /**
+      * The label used for the upload button.
+      */
+      labelUploadButton: {
+        type: String,
+        value: 'Upload file'
+      },
+      labelCancelButton: {
+        type: String,
+        value: 'Cancel'
+      },
+      labelTestButton: {
+        type: String,
+        value: 'Test'
+      },
+      _uploadingFile: {
+        type: Boolean,
+        value: false
+      },
+
+
+
+    },
+
+    ready: function () {
+
+    },
+
+    computeResourceURL: function (projectId) {
+      return app.baseHref + '/projects/' + projectId + '/components/';
+    },
+
+    onUploadFileTap: function(e) {
+      this.showFileUploadForm = true;
+    },
+
+
+    _submitButton(event) {
+      Polymer.dom(event).localTarget.parentElement.submit();
+      event.currentTarget.parentNode.reset();
+    },
+    _cancelButton(event){
+      event.currentTarget.parentNode.reset();
+      this.showFileUploadForm = false;
+    },
+
+
+    // Convert arraybuffer to base64
+    // http://stackoverflow.com/questions/9267899/arraybuffer-to-base64-encoded-string
+    arrayBufferToBase64: function(buffer) {
+      var binary = '';
+      var bytes = new Uint8Array( buffer );
+      var len = bytes.byteLength;
+      for (var i = 0; i < len; i++) {
+        binary += String.fromCharCode( bytes[ i ] );
+      }
+      return window.btoa( binary );
+    },
+
+    // Send requests
+    uploadFile(event) {
+      event.preventDefault();
+      var form = Polymer.dom(event).localTarget;
+      var elements = form.elements;
+      var fileName = form.elements.filecontent.files[0].name;
+      var message = form.elements["identifier"].value;
+      var reader = new FileReader();
+      var blob = form.elements.filecontent.files[0];
+      reader.readAsArrayBuffer(blob);
+      var that = this;
+
+      reader.onload = function () {
+        var base64Content = that.arrayBufferToBase64(reader.result);
+        //that.ajaxSendFile(fileName,message,base64Content);
+        that.sendFile(fileName,message,base64Content);
+      }
+    },
+
+    // send file via backend service to GitHub
+    sendFile: function(fileName,message,fileContent) {
+      var postFile = this.$.postFileRequest;
+      console.log("sendFile this.accessToken:"+this.accessToken);
+      var header = {Authorization: this.accessToken};
+      var parameters = {
+        //org: this.currentOwner,
+        //repo: this.currentRepo,
+        org: this.ajaxParams.org, //ajaxParams defined in app.js
+        repo: this.ajaxParams.repo,
+        path:fileName,
+      };
+      postFile.headers = header;
+      postFile.params = parameters;
+      postFile.body = JSON.stringify({
+        "message": message,
+        "content": fileContent
+      });
+      postFile.generateRequest();
+    },
+
+
+
+
+    onComponentTap: function (e) {
+      var model = e.model;
+
+      // for future use in compnent-detail for svg file
+      var original_download_url = model.item.download_url.replace("rawgit.com","raw.githubusercontent.com");
+      console.log("model.item.download_url:" + model.item.download_url);
+      console.log("original_download_url:" + original_download_url);
+
+      // this.selectedComponent = {
+      //   name: model.item.name,
+      //   path: model.item.path
+      //   sha: model.item.sha,
+      //   url: model.item.url,
+      //   html_url: model.item.html_url,
+      //   download_url: model.item.download_url,
+      // };
+
+      this.selectedComponent = e.model;
+      this.selectedComponent["original_download_url"] = original_download_url;
+      this.selectedComponent["org"] = this.ajaxParams.org; //ajaxParams defined in app.js
+      this.selectedComponent["repo"] = this.ajaxParams.repo;
+      // repo:
+      //this.selectedComponent = e.model;
+      page('/projects/'+ this.projectName +'/components/' + model.item.name);
+    },
+
+
+    load: function() {
+
+      console.log("componentsList.load()");
+      // load the content of the repo, default branch: master
+      // e.g. https://api.github.com/repos/Co-Design-Platform/koala/contents?ref=master
+      this.projectName = this.$.componentsLoader.params.repo;
+      this.$.componentsLoader.generateRequest();
+
+      // load the master tree of the repo
+      // e.g. https://api.github.com/repos/Co-Design-Platform/koala/git/trees/master
+
+
+    },
+
+    // for debug
+    sentRequest: function(e,detail){
+      console.log("componenets-list make a request detail.request.url:"+detail.request.url);
+    },
+
+    // Error handling
+    // handleError: function(event){
+    //   //var response = event.target.lastResponse;
+    //  response = event.detail;
+    //   var statusCode = event.detail.request.xhr.response;
+    //   console.log("handleError statusCode:"+statusCode); //200
+    //
+    //   console.log("create a file event.detail.statusText:"+event.detail.statusText); //OK
+    //
+    //   console.log("commit error" + event.detail);
+    //
+    //   this.$.toast.text =('Create File Fail: '+event.detail.statusText);
+    //   this.$.toast.open();
+    // },
+
+    handleError: function(e, detail) {
+      console.log(detail.request.status); //the status code, e.g. 422
+      console.log(detail.request.statusText);  //the error status text, here is empty
+      console.log(e.detail.request.xhr.response); // the whole reponse object
+      console.log(e.detail.request.xhr.response.responseMessage); // e.g.Unprocessable Entity
+
+      this.$.toast.text =("Create File Fail");
+      this.$.toast.open();
+    },
+
+
+    receiveFileUpload: function(event){
+      var response = event.target.lastResponse;
+      this.showFileUploadForm = false;
+
+      var statusCode = event.detail.status;
+      console.log("create a file statusCode:"+statusCode); //200
+      console.log("create a file event.detail.statusText:"+event.detail.statusText); //OK
+
+      if(statusCode == '200' || statusCode == '201'){
+        console.log("upload success");
+        // reload the componentsList
+        this.load();
+        this.$.toast.text = 'File created';
+      }else{
+        //Failed : HTTP error code : 403, error msg: Forbidden
+        console.log("fail to create a file: " + event.detail.statusText);
+        console.log("response.errorStreamString: " + response.errorStreamString);
+        console.log("response.responseCode: " + response.responseCode);
+        console.log("response.responseMessage: " + response.responseMessage);
+
+        this.$.toast.text =('Create File Fail: '+event.detail.statusText);
+
+        this.$.toast.text =('Create File Fail: '+event.detail.statusText);
+      }
+      this.$.toast.open();
+    },
+
+
+
+
+
+    // the original download_url from GitHub is like:
+    // https://raw.githubusercontent.com/Co-Design-Platform/panda/master/bear.svg
+    // but this svg cannot be shown on browser directly within <img>
+    // because GitHub sends text/plain header
+    // see http://stackoverflow.com/questions/13808020/include-an-svg-hosted-on-github-in-markdown
+    // and https://github.com/isaacs/github/issues/316
+    //
+    // changeComponents: function(array){
+    //   var cLength = array.length;
+    //   console.log("cLength:"+cLength);
+    //
+    //   for (i = 0; i < cLength; i++) {
+    //     var item = this.get(['array', i]);
+    //     console.log("name:"+item.name);
+    //     console.log("download_url:"+item.download_url);
+    //     src = item.download_url;
+    //     var res = src.replace("raw.githubusercontent.com", "cdn.rawgit.com");
+    //     console.log("res:"+res);
+    //     this.components[i].download_url = res;
+    //     this.notifyPath('components[i].download_url');
+    //     console.log("new components.download_url:"+this.components[i].download_url);
+    //   }
+    //
+    //   return components;
+    //
+    // },
+
+
+  });
+})();
+</script>
 
 </dom-module>

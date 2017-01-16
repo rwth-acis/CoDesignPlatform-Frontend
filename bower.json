@@ -34,7 +34,10 @@
     "iron-form": "PolymerElements/iron-form#^1.1.4",
     "iron-form-element-behavior": "PolymerElements/iron-form-element-behavior#^1.0.6",
     "paper-behaviors": "PolymerElements/paper-behaviors#^1.0.12",
-    "neon-animation": "PolymerElements/neon-animation#^1.2.4"
+    "neon-animation": "PolymerElements/neon-animation#^1.2.4",
+    "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#^1.4.3",
+    "paper-listbox": "PolymerElements/paper-listbox#^1.1.2",
+    "paper-item": "PolymerElements/paper-item#^1.2.1"
   },
   "devDependencies": {
     "web-component-tester": "^4.0.0"

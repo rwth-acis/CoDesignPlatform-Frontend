@@ -75,6 +75,7 @@
     app.gitHubOrg = "Co-Design-Platform";
     app.ajaxParamsGitHubOrg = {org: app.gitHubOrg};
     app.showFileUploadForm = false;
+    app.currentProject = "";
 
     app.displayInstalledToast = function() {
         // Check to make sure caching is actually enabled—it won't be in the dev environment.
@@ -241,17 +242,24 @@
         return this.baseHref + '/components/' + componentId;
     };
 
+
+    app.branchSelected = function(e){
+      var selectedItem = e.target.selectedItem;
+      if (selectedItem){
+        console.log("selected: " + selectedItem.innerText);
+        this.loadComponentsList(app.currentProject, selectedItem.innerText);
+      }
+    };
     /**
      * Loads the project info page and the components in the master branch
      *
      * @param projectName the name of the project to load.
      */
     app.loadProjectInfo = function(projectName) {
-
+        app.currentProject = projectName;
+        // load the information of the project
         var projectInfoUrl = this.baseHref + '/projectinfo';
         this.$.projectInfoLoader.url = projectInfoUrl;
-        console.log("projectInfoUrl:" + projectInfoUrl);
-
         this.$.projectInfoLoader.headers = app.header;
 
         var parameters = {
@@ -261,17 +269,30 @@
         this.$.projectInfoLoader.params = parameters;
         this.$.projectInfoLoader.generateRequest();
 
-        // load the components of the project
-        var componentsListAjaxParams = {
-              org: app.gitHubOrg,
-              repo: projectName,
-              branch: 'master'
-            };
-        this.$.componentsList.projectContentsUrl = this.baseHref+'/components';
-        this.$.componentsList.ajaxHeader = app.header;
-        this.$.componentsList.ajaxParams = componentsListAjaxParams;
-        // this.$.componentsList.projectTreeUrl= projectInfoUrl+'/git/trees/master';
-        this.$.componentsList.load();
+        // load the branches of the project
+        var projectBranchInfoUrl = this.baseHref + '/projectbranchinfo';
+        this.$.projectBranchInfoLoader.url = projectBranchInfoUrl;
+        this.$.projectBranchInfoLoader.headers = app.header;
+        this.$.projectBranchInfoLoader.params = parameters;
+        this.$.projectBranchInfoLoader.generateRequest();
+
+        //this.loadComponentsList(projectName, "master");
+    };
+
+    app.loadComponentsList = function(projectName,branchName){
+      // load the components of the project
+      console.log("branchName:"+branchName);
+      var componentsListAjaxParams = {
+            org: app.gitHubOrg,
+            repo: projectName,
+            branch: branchName
+          };
+      this.$.componentsList.projectContentsUrl = this.baseHref+'/components';
+      this.$.componentsList.ajaxHeader = app.header;
+      this.$.componentsList.ajaxParams = componentsListAjaxParams;
+      // this.$.componentsList.projectTreeUrl= projectInfoUrl+'/git/trees/master';
+      this.$.componentsList.load();
+
 
     };
 
@@ -279,19 +300,49 @@
     app.loadComponent = function(){
 
       var name = this.$.componentsList.selectedComponent.name;
-      var componentUrl = this.$.componentsList.selectedComponent.download_url;
       var componentSha = this.$.componentsList.selectedComponent.sha;
+      var url = this.$.componentsList.selectedComponent.url;
+      var download_url = this.$.componentsList.selectedComponent.download_url;
       var htmlUrl = this.$.componentsList.selectedComponent.html_url;
       var original_download_url=  this.$.componentsList.selectedComponent.original_download_url;
+      console.log("original_download_url;"+original_download_url);
+      console.log("this.$.componentsList.selectedComponent.org:"+this.$.componentsList.selectedComponent.org);
 
       this.$.componentDetail.componentName = name;
-      this.$.componentDetail.componentUrl = componentUrl;
       this.$.componentDetail.componentSha = componentSha;
-      this.$.componentDetail.htmlUrl = htmlUrl;
-      this.$.componentDetail.originalDownloadUrl = original_download_url;
+      this.$.componentDetail.componentUrl = url;
+      this.$.componentDetail.componentDownloadUrl = download_url
+      this.$.componentDetail.componentHtmlUrl = htmlUrl;
+      this.$.componentDetail.componentOriginalDownloadUrl = original_download_url;
 
       this.$.componentDetail.load();
     };
+
+    // finding locating dynamically-created nodes
+    // https://www.polymer-project.org/1.0/docs/devguide/local-dom#node-finding
+    //var el = Polymer.dom(this.root).querySelector('#fileUploadWidget');
+
+
+    //var el = Polymer.dom(this.$.fileUploadWidget);
+    //app.async = function(){
+    //   var find = this.$$('#fileUploadWidget');
+    //   console.log("find.id"+find);
+    //
+    //   find.addEventListener('receiveFileUpload', function(){
+    //   var normalizedEvent = Polymer.dom(event);
+    //   // logs #myButton
+    //   console.info('rootTarget is:', normalizedEvent.rootTarget);
+    //   // logs the instance of event-targeting that hosts #myButton
+    //   console.info('localTarget is:', normalizedEvent.localTarget);
+    //   // logs [#myButton, document-fragment, event-retargeting,
+    //   //       body, html, document, Window]
+    //   console.info('path is:', normalizedEvent.path);
+    //   });
+    // };
+    //var el = Polymer.dom(this.root).firstElementChild;
+    //console.log("el.id:"+el.id);
+
+
 
     // for debug
     app.sentRequest = function(e,detail){
@@ -416,13 +467,13 @@
         createDialog.open();
     };
 
-    app.onUploadFileTap = function(e) {
-      app.showFileUploadForm = true;
-      console.log("app.showFileUploadForm:"+app.showFileUploadForm);
-    };
+    // app.onUploadFileTap = function(e) {
+    //   app.showFileUploadForm = true;
+    //   console.log("app.showFileUploadForm:"+app.showFileUploadForm);
+    // };
 
     app.onUpdateFileTap = function(e) {
-      //var sha = this.$.componentsList.selectedComponent.sha;
+      var sha = this.$.componentsList.selectedComponent.sha;
       app.showFileUpdateForm = true;
       // this.$.updateFile.updateFileSha = sha;
     }
@@ -574,14 +625,17 @@
         e.preventDefault();
     };
 
+
+    // handle create project ajax request(postProjectRequest)'s response
     app.handleResponseProject = function(data){
 
         var result = data.detail.response;
 
         // for debug
-        console.log("JSON.stringify(result):"+JSON.stringify(result));
+        //console.log("JSON.stringify(result):"+JSON.stringify(result));
 
         if(result.name != null){
+            // reload the projectsList
             this.$.projectsList.load();
             console.log("this.$.projectsList.load()");
             this.$.projToast.text = 'created';

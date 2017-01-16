@@ -1,169 +1,327 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 
 <dom-module id="component-detail">
-    <template>
-        <style>
-            :host {
-                display: block;
-                padding: 16px;
+  <template>
+  <style>
+  :host {
+    display: block;
+    padding: 16px;
 
-            }
+  }
 
-            paper-card {
-              box-sizing: border-box;
-              margin: 16px auto;
-              --paper-card-header-image: {
-                max-width:200px;
-                max-height:200px;
-              };
-              --paper-card-content:{
-                color: var(--google-blue-500);
-              };
-            }
+  paper-card {
+    box-sizing: border-box;
+    margin: 16px auto;
+    --paper-card-header-image: {
+      max-width:200px;
+      max-height:200px;
+    };
+    --paper-card-content:{
+      color: var(--google-blue-500);
+    };
+  }
 
-            paper-card:hover {
-                background-color: var(--list-hover-background-color);
-            }
-        </style>
+  paper-card:hover {
+    background-color: var(--list-hover-background-color);
+  }
 
-
-        <p>{{componentUrl}}</p>
-        <p>{{htmlUrl}}</p>
-        <p>{{componentSha}}</p>
-        <!-- <canvas id="canvas1" width="400" height="400"></canvas> -->
-        <iron-ajax
-                id="svgContentLoader"
-                url="{{baseHref}}\getsvgcontent"
-                handle-as="xml"
-                on-request="sentRequest"
-                on-response="handleResponse"
-                loading="{{loading}}">
-        </iron-ajax>
-        <div id="svgContent"></div>
-
-    </template>
-
-    <script>
-        (function () {
-//            'use strict';
-
-            Polymer({
-                is: 'component-detail',
-                properties: {
-                    projectId: {
-                        type: Number
-                    },
-                    projectContentsUrl:{
-                      type: String
-                    },
-                    ajaxParams:{
-                      type: Object
-                    },
-                    projectTreeUrl:{
-                      type: String
-                    },
-                    resourceURL: {
-                        type: String,
-                        computed: 'computeResourceURL(projectId)'
-                    },
-                    components: {
-                        type: Array,
-                        notify: true
-                    },
-                    treeComponents: {
-                        type: Array,
-                        notify: true
-                    },
-                    loading: {
-                        type: Boolean,
-                        notify: true
-                    },
-                    projectName:{
-                      type: String
-                    },
-                    isAuthorized:{
-                      type: String
-                    },
-                    showFileUpdateForm:{
-                      type: Boolean,
-                      notify: true
-                    },
-                    componentName:{
-                      type: String
-                    },
-                    componentUrl:{
-                      type: String
-                    },
-                    componentSha:{
-                      type: String
-                    },
-                    htmlUrl:{
-                      type: String
-                    },
-                    originalDownloadUrl:{
-                      type: String
-                    },
-                },
-
-                ready: function () {
-
-                },
-
-                computeResourceURL: function (projectId) {
-                    return app.baseHref + '/projects/' + projectId + '/components/';
-                },
-
-                onComponentTap: function (e) {
-                    var model = e.model;
-                    page('/projects/'+ this.projectName +'/components/' + model.item.name);
-                },
-                // onProjectTap: function (e) {
-                //     var model = e.model;
-                //     page('/projects/' + model.item.name);
-                // },
-
-                load: function() {
-
-                  //http://stackoverflow.com/questions/3768565/drawing-a-svg-file-on-a-html5-canvas
-                  // var can = this.$.canvas1;
-                  // var ctx = can.getContext('2d');
-                  // var img = new Image();
-                  // img.onload = function() {
-                  //   ctx.drawImage(img, 0, 0);
-                  // }
-                  // img.src = componentUrl;
-//
-                  this.$.svgContentLoader.params = {svgurl: this.originalDownloadUrl};
-                  this.$.svgContentLoader.generateRequest();
-                },
-//
-                onUpdateFileTap: function(e) {
-                  //var sha = this.$.componentsList.selectedComponent.sha;
-                  this.showFileUpdateForm = true;
-                  //this.$.updateFile.updateFileSha = componentSha;
-                },
-
-                // for debug
-                sentRequest: function(e,detail){
-                  console.log("componenets-list make a request detail.request.url:"+detail.request.url);
-                },
-
-                handleResponse: function(event){
-                  console.log("_handleResponse... ");
-                  console.log(event.detail.response);
-                  response = event.detail.response; // it is xml format
-                  //svgResult = response.querySelectorAll('svg');
-                  var svgText = new XMLSerializer().serializeToString(response); // from xml to string
-                  this.$.svgContent.innerHTML = svgText;
-                },
+  paper-fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+  }
+  </style>
 
 
+  <p>{{componentUrl}}</p>
+  <p>{{componentSha}}</p>
+  <!-- <canvas id="canvas1" width="400" height="400"></canvas> -->
+  <iron-ajax
+  id="svgContentLoader"
+  url="{{baseHref}}\getsvgcontent"
+  handle-as="xml"
+  on-request="sentRequest"
+  on-response="handleResponse"
+  loading="{{loading}}">
+  </iron-ajax>
+
+  <iron-ajax
+      id="updateFileRequest"
+      handle-as="json"
+      url="{{baseHref}}/updatefile"
+      content-type="application/json"
+      method="POST"
+      on-request="sentRequest"
+      on-response="receiveFileUpload"
+      on-error="handleError">
+  </iron-ajax>
+
+
+  <template is="dom-if" if="{{isAuthorized}}">
+    <paper-fab id="updateFileBtn" class="fabAdd" on-tap="onUpdateFileTap" icon="update"></paper-fab>
+  </template>
+
+<template is="dom-if" if="{{showFileUpdateForm}}">
+  <form is="iron-form" id="fileform" name="updateForm" on-iron-form-presubmit="updateFile">
+    <input label="[[labelFile]]" type="file" name="filecontent" required disabled="[[_updateingFile]]"/>
+    <input label="[[labelIdentifier]]" type="text" name="identifier" value="{{identifier}}" placeholder="please give a description" required disabled="[[_updateingFile]]"/>
+    <paper-bon on-click="_submitButton" disabled="[[_updateingFile]]">[[labelupdateButton]]</paper-button>
+      <paper-button on-click="_cancelButton" disabled="[[_updateingFile]]">[[labelCancelButton]]</paper-button>
+      <!-- <paper-button id="testButton" on-click="_testButton" disabled="[[_updateingFile]]">[[labelTestButton]]</paper-button> -->
+    </form>
+  </template>
+
+  <paper-toast id="toast" text=""></paper-toast>
+
+</form>
+
+
+<div id="svgContent"></div>
+
+</template>
+
+<script>
+(function () {
+  //            'use strict';
+
+  Polymer({
+    is: 'component-detail',
+    properties: {
+      projectId: {
+        type: Number
+      },
+      accessToken:{
+        type: String,
+      },
+      projectContentsUrl:{
+        type: String
+      },
+      ajaxParams:{
+        type: Object
+      },
+      projectTreeUrl:{
+        type: String
+      },
+      resourceURL: {
+        type: String,
+        computed: 'computeResourceURL(projectId)'
+      },
+      components: {
+        type: Array,
+        notify: true
+      },
+      treeComponents: {
+        type: Array,
+        notify: true
+      },
+      loading: {
+        type: Boolean,
+        notify: true
+      },
+      projectName:{
+        type: String
+      },
+      isAuthorized:{
+        type: Boolean
+      },
+      showFileUpdateForm:{
+        type: Boolean,
+        notify: true
+      },
+      componentName:{
+        type: String
+      },
+      componentUrl:{
+        type: String
+      },
+      componentSha:{
+        type: String
+      },
+      componentHtmlUrl:{
+        type: String
+      },
+      componentDownloadUrl:{
+        type:String
+      },
+      componentOriginalDownloadUrl :{
+        type: String
+      },
+
+      /**
+      * The label used for the file select input element.
+      */
+      labelFile: {
+        type: String,
+        value: 'Select a file'
+      },
+      /**
+      * The label used for the identifier input element.
+      *
+      * If set to "" (empty value), the input element is hidden.
+      */
+      labelIdentifier: {
+        type: String,
+        value: 'Description (necessary)'
+      },
+      /**
+      * A string used to identify the file.
+      *
+      * Must not start with a slash, must not end with a slash and must not contain double slashes.
+      *
+      * If empty or null the hashed filename is used as identifier.
+      */
+      identifier: {
+        type: String,
+        value: ''
+      },
+      /**
+      * The label used for the update button.
+      */
+      labelupdateButton: {
+        type: String,
+        value: 'Update file'
+      },
+      labelCancelButton: {
+        type: String,
+        value: 'Cancel'
+      },
+      labelTestButton: {
+        type: String,
+        value: 'Test'
+      },
+      _updateingFile: {
+        type: Boolean,
+        value: false
+      },
+
+    },
+
+    ready: function () {
+
+    },
+
+    computeResourceURL: function (projectId) {
+      return app.baseHref + '/projects/' + projectId + '/components/';
+    },
+
+    onComponentTap: function (e) {
+      var model = e.model;
+      page('/projects/'+ this.projectName +'/components/' + model.item.name);
+    },
+    // onProjectTap: function (e) {
+    //     var model = e.model;
+    //     page('/projects/' + model.item.name);
+    // },
+
+    load: function() {
+
+      //http://stackoverflow.com/questions/3768565/drawing-a-svg-file-on-a-html5-canvas
+      // var can = this.$.canvas1;
+      // var ctx = can.getContext('2d');
+      // var img = new Image();
+      // img.onload = function() {
+      //   ctx.drawImage(img, 0, 0);
+      // }
+      // img.src = componentUrl;
+      //
+      this.$.svgContentLoader.params = {svgurl: this.componentOriginalDownloadUrl };
+      this.$.svgContentLoader.generateRequest();
+    },
+    //
+    onUpdateFileTap: function(e) {
+      this.showFileUpdateForm = true;
+    },
+
+    // for debug
+    sentRequest: function(e,detail){
+      console.log("componenet-detail make a request detail.request.url:"+detail.request.url);
+    },
+
+    handleResponse: function(event){
+      console.log("_handleResponse... ");
+      console.log(event.detail.response);
+      response = event.detail.response; // it is xml format
+      //svgResult = response.querySelectorAll('svg');
+      var svgText = new XMLSerializer().serializeToString(response); // from xml to string
+      this.$.svgContent.innerHTML = svgText;
+    },
 
 
 
 
-            });
-        })();
-    </script>
+    _submitButton(event) {
+      Polymer.dom(event).localTarget.parentElement.submit();
+      event.currentTarget.parentNode.reset();
+    },
+    _cancelButton(event){
+      event.currentTarget.parentNode.reset();
+      this.showFileUploadForm = false;
+    },
+
+
+
+    // Convert arraybuffer to base64
+    // http://stackoverflow.com/questions/9267899/arraybuffer-to-base64-encoded-string
+    arrayBufferToBase64: function(buffer) {
+      var binary = '';
+      var bytes = new Uint8Array( buffer );
+      var len = bytes.byteLength;
+      for (var i = 0; i < len; i++) {
+        binary += String.fromCharCode( bytes[ i ] );
+      }
+      return window.btoa( binary );
+    },
+
+    // Send requests
+    updateFile(event) {
+      event.preventDefault();
+      var form = Polymer.dom(event).localTarget;
+      var elements = form.elements;
+      var fileName = form.elements.filecontent.files[0].name;
+      var message = form.elements["identifier"].value;
+      var reader = new FileReader();
+      var blob = form.elements.filecontent.files[0];
+      reader.readAsArrayBuffer(blob);
+      var that = this;
+
+      reader.onload = function () {
+        var base64Content = that.arrayBufferToBase64(reader.result);
+        //that.ajaxSendFile(fileName,message,base64Content);
+        that.sendFile(fileName,message,base64Content);
+      }
+    },
+
+    // send file via backend service to GitHub
+    sendFile: function(fileName,message,fileContent) {
+      var postFile = this.$.postFileRequest;
+      //console.log("sendFile this.accessToken:"+this.accessToken);
+      var header = {Authorization: this.accessToken};
+      var parameters = {
+        //org: this.currentOwner,
+        //repo: this.currentRepo,
+        org: this.ajaxParams.org, //ajaxParams defined in app.js
+        repo: this.ajaxParams.repo,
+        path:fileName,
+      };
+      postFile.headers = header;
+      postFile.params = parameters;
+      postFile.body = JSON.stringify({
+        "sha": this.componentSha,
+        "message": message,
+        "content": fileContent
+      });
+      postFile.generateRequest();
+    },
+
+
+
+
+
+
+
+
+  });
+})();
+</script>
 
 </dom-module>

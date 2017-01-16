@@ -203,7 +203,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <section id="projectsSection" data-route="projects" href="{{baseUrl}}projects" style="height:100%;">
 
             <paper-scroll-header-panel id="scrollProjects" class="flex">
-              <projects-list name="projects" id="projectsList" base-href={{baseHref}} is-authorized={{isAuthorized}} org-name={{gitHubOrg}} access-token={{access_token}} ajax-params={{ajaxParamsGitHubOrg}} ajax-header={{header}}></projects-list>
+              <projects-list name="projects" id="projectsList" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" org-name="{{gitHubOrg}}" access-token="{{access_token}}" ajax-params="{{ajaxParamsGitHubOrg}}" ajax-header="{{header}}"></projects-list>
             </paper-scroll-header-panel>
 
             <template is="dom-if" if="{{isAuthorized}}">
@@ -248,6 +248,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                      on-request="sentRequest"
                      last-response="{{project}}">
           </iron-ajax>
+          <iron-ajax id="projectBranchInfoLoader"
+                     on-request="sentRequest"
+                     last-response="{{projectBranch}}">
+          </iron-ajax>
 
           <paper-scroll-header-panel id="scrollComponents">
             <paper-material elevation="1">
@@ -257,33 +261,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </div>
             </paper-material>
 
-            <components-list id="componentsList" loading="{{loading}}"></components-list>
+            <paper-dropdown-menu label="Project Branch" on-iron-select="branchSelected">
+                <paper-listbox class="dropdown-content" selected="0">
+                  <template is="dom-repeat" items="{{projectBranch}}">
+                    <paper-item>[[item.name]]</paper-item>
+                  </template>
+                </paper-listbox>
+            </paper-dropdown-menu>
+
+            <components-list id="componentsList" loading="{{loading}}" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" access-token="{{access_token}}"></components-list>
 
           </paper-scroll-header-panel>
 
-          <template is="dom-if" if="{{isAuthorized}}">
-            <paper-fab id="uploadFileBtn" class="fabAdd" on-tap="onUploadFileTap" icon="add"></paper-fab>
-          </template>
-          <template is="dom-if" if="{{showFileUploadForm}}">
-            <!--for upload via frontend
-            <file-upload-widget service-url="https://api.github.com/repos/" header={{accessGitHubHeader}} current-owner={{gitHubOrg}} current-repo={{project.name}} current-githubuser={{currentGitHubUser}} show-fileuploadform={{showFileUploadForm}}></file-upload-widget>
-            -->
-            <file-upload-widget base-href={{baseHref}} service-url="https://api.github.com/repos/" access-token={{access_token}} current-owner={{gitHubOrg}} current-repo={{project.name}} current-githubuser={{currentGitHubUser}} show-fileuploadform={{showFileUploadForm}}></file-upload-widget>
-          </template>
         </section>
 
         <!-- SIGNLE COMPONENTS OF A PROJECT -->
         <section data-route="component-info" href="{{baseUrl}}component-info" style="height:100%;">
-          <component-detail id="componentDetail" base-href={{baseHref}} is-authorized={{isAuthorized}}></component-detail>
-
-          <template is="dom-if" if="{{isAuthorized}}">
-            <paper-fab id="updateFileBtn" class="fabAdd" on-tap="onUpdateFileTap" icon="add"></paper-fab>
-          </template>
-          <!-- <template id="updateFile" is="dom-if" if="{{showFileUpdateForm}}">
-            <file-upload-widget id="updateFileWidget" base-href={{baseHref}} service-url="https://api.github.com/repos/" access-token={{access_token}} current-owner={{gitHubOrg}} current-repo={{project.name}} current-githubuser={{currentGitHubUser}} show-fileupdateform={{showFileUpdateForm}}></file-upload-widget>
-          </template> -->
-
-
+          <component-detail id="componentDetail" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" access-token="{{access_token}}"></component-detail>
         </section>
 
 

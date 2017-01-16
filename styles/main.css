@@ -16,6 +16,11 @@ paper-fab {
     right: 30px;
 }
 
+paper-dropdown-menu {
+  margin: 16px auto;
+  left: 16px;
+}
+
 paper-toolbar paper-icon-button{
   --paper-icon-button-ink-color: white;
 }

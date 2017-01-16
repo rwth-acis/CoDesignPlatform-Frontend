@@ -1,21 +1,21 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 
-/* upload file to GitHub directly from frontend */
+/* upload file to GitHub */
 
 
 <dom-module id="file-upload-widget">
-  <template>
+  <template id="file-upload-widget-template">
 
     <iron-ajax id="ajaxUploadFile"
         method='PUT'
         content-type="application/json"
-        on-response="_receiveFileUpload"
+        on-response="_ajaxReceiveFileUpload"
         on-error="_handleError"
         headers = "{{header}}"
         verbose
         loading = "{{_uploadingFile}}">
-    <!-- </iron-ajax> -->
+    </iron-ajax>
 
     <iron-ajax
         id="postFileRequest"
@@ -24,7 +24,7 @@
         content-type="application/json"
         method="POST"
         on-request="_sentRequest"
-        on-response="_receiveFileUpload2"
+        on-response="receiveFileUpload"
         on-error="_handleError">
     </iron-ajax>
 
@@ -35,7 +35,7 @@
         content-type="application/json"
         method="POST"
         on-request="_sentRequest"
-        on-response="_receiveFileUpload2"
+        on-response="receiveFileUpload"
         on-error="_handleError">
     </iron-ajax>
 
@@ -58,7 +58,6 @@
 
       }
     </style>
-
     <paper-dialog modal="true" id="file-upload-widget-error-dialog">
       <h2 id="error-dialog-title">Error</h2>
       <div id="error-dialog-message">An error occurred. Please try again.</div>
@@ -72,8 +71,8 @@
       <input label="[[labelIdentifier]]" type="text" name="identifier" value="{{identifier}}" placeholder="please give a description" required disabled="[[_uploadingFile]]"/>
       <paper-button on-click="_submitButton" disabled="[[_uploadingFile]]">[[labelUploadButton]]</paper-button>
       <paper-button on-click="_cancelButton" disabled="[[_uploadingFile]]">[[labelCancelButton]]</paper-button>
+      <paper-button id="testButton" on-click="_testButton" disabled="[[_uploadingFile]]">[[labelTestButton]]</paper-button>
     </form>
-
 
 
   <!-- <template is="dom-if" if="{{showFileUpdateForm}}"> -->
@@ -252,6 +251,10 @@
           type: String,
           value: 'Cancel'
         },
+        labelTestButton: {
+          type: String,
+          value: 'Test'
+        },
         labelUpdateButton: {
           type: String,
           value: 'Update file'
@@ -278,7 +281,6 @@
       },
 
       // Element behavior
-
       _computeServiceUrl: function(base) {
         // base: https://api.github.com/repos/
         //https://api.github.com/repos/:owner/:repo/contents/:path
@@ -319,35 +321,91 @@
         Polymer.dom(event).localTarget.parentElement.submit();
       },
       _cancelButton(event){
-        this.showFileuploadform = false;
+        this.showFileUploadform = false;
       },
 
       // Data processing
 
-      _receiveFileUpload(event) {
+      _ajaxReceiveFileUpload(event) {
         var response = event.target.lastResponse;
         //this.querySelector('form').reset();
         this.$.fileform.reset();
         //document.location.reload(true);
         console.log("upload successful: committer " + response.commit.name);
         this.showFileUploadForm = false;
+
+
         // if (this.uploadSuccessCallback) {
         //   window[this.uploadSuccessCallback](response);
         // }
       },
 
-      _receiveFileUpload2(event) {
+      receiveFileUpload(event) {
         var response = event.target.lastResponse;
         //this.querySelector('form').reset();
         this.$.fileform.reset();
         //document.location.reload(true);
         console.log("upload response:"+response);
         this.showFileUploadForm = false;
-        document.location.reload(true);
+        // document.location.reload(true);
+        //Polymer.dom(this.root).querySelector('#componentsList').load();
+
+        console.log("receiveFileUpload event.target.parentNode.id:"+event.target.parentNode.id);
+
+
+        var statusCode = event.detail.status;
+        console.log("create a file statusCode:"+statusCode); //200
+        console.log("create a file event.detail.statusText:"+event.detail.statusText); //OK
+        if(statusCode == '200'){
+            // reload the componentsList
+
+            //null
+            //Polymer.dom(this.root).querySelector('#componentsList').load();
+            //console.log("this.$.componentsList.load()");
+            //this.$.projToast.text = 'File created';
+        } else {
+            //this.$.projToast.text = i18n.getMsg('errorCrePrj');
+            //Failed : HTTP error code : 403, error msg: Forbidden
+            console.log("fail to create a file:" + event.detail.statusText);
+            //this.$.projToast.text = "Fail to create a file.";
+        }
+      //  this.$.projToast.open();
+
+
         // if (this.uploadSuccessCallback) {
         //   window[this.uploadSuccessCallback](response);
         // }
       },
+
+      _testButton: function(e){
+        //Polymer.dom(this.root).querySelector('#componentsList').load();
+        console.log("e.target.id:"+e.target.id); //testButton
+        console.log("e.target.parentNode.id:"+e.target.parentNode.id); //fileform
+        console.log("e.target.parentNode.parentNode.id:"+e.target.parentNode.parentNode.id); //undefined
+        //console.log("e.target.parentNode.parentNode.parentNode.id:"+e.target.parentNode.parentNode.parentNode.id); //error:id of null
+
+        //console.log("document.getElementById(file-upload-widget).id):"+document.getElementById("file-upload-widget").id);//error: id of null
+
+
+        var el = document.getElementById("file-upload-widget").parentNode.id;
+        console.log("document.getElementById(file-upload-widget).parentNode.id:"+el);
+        // var el = document.getElementById(str).parentNode.parentNode.querySelector('comments-list')
+        // el.load();
+
+        console.log(Polymer.dom(this.root).id)
+        console.log("Polymer.dom(this).id:"+Polymer.dom(this).id);
+        console.log("Polymer.dom(this).parentNode.id:"+Polymer.dom(this).parentNode.id);
+
+        console.log("Polymer.dom(this.root).id:"+Polymer.dom(this.root).id);
+        console.log("Polymer.dom(parent).id:"+Polymer.dom(parent).id);
+        console.log("this.domHost.id:"+this.domHost.id);
+
+        console.log("Polymer.dom(parent).childNodes.length:"+Polymer.dom(parent).childNodes.length);
+        console.log("Polymer.dom(this.root).parentNode.id:"+Polymer.dom(this.root).parentNode.id);
+        console.log("Polymer.dom(parent).querySelector('#projToast').id:"+Polymer.dom(parent).querySelector('#projToast').id);
+        //console.log("this.$.projToast.id:"+this.$.projToast);
+      },
+
 
       // Convert arraybuffer to base64
       // http://stackoverflow.com/questions/9267899/arraybuffer-to-base64-encoded-string
@@ -366,11 +424,7 @@
       _uploadFile(event) {
         event.preventDefault();
         var form = Polymer.dom(event).localTarget;
-        //console.log("form.name:"+form.name);
         var elements = form.elements;
-        //console.log("elements.length:"+elements.length);
-        // console.log("form.length:"+form.length);
-
         var fileName = form.elements.filecontent.files[0].name;
         var message = form.elements["identifier"].value;
         var reader = new FileReader();
@@ -380,8 +434,8 @@
 
         reader.onload = function () {
           var base64Content = that._arrayBufferToBase64(reader.result);
-          //that._sendFile(fileName,message,base64Content);
-          that._sendFile2(fileName,message,base64Content);
+          //that.ajaxSendFile(fileName,message,base64Content);
+          that.sendFile(fileName,message,base64Content);
         }
       },
 
@@ -411,8 +465,8 @@
         }
       },
 
-      // send file via frondend
-      _sendFile: function(fileName,message,fileContent) {
+      // send file via frondend ajax request
+      ajaxSendFile: function(fileName,message,fileContent) {
         var ajaxUploadFile = this.$.ajaxUploadFile;
         ajaxUploadFile.body = JSON.stringify({
             "message": message,
@@ -425,12 +479,9 @@
       },
 
       // send file via backend service to GitHub
-      _sendFile2: function(fileName,message,fileContent) {
+      sendFile: function(fileName,message,fileContent) {
         var postFile = this.$.postFileRequest;
         var header = {Authorization: this.accessToken};
-        // console.log("accessToken:"+this.accessToken);
-        // console.log("header:"+header);
-        // console.log("header:"+header.Authorization);
         var parameters = {
               org: this.currentOwner,
               repo: this.currentRepo,
@@ -491,7 +542,6 @@
 
 
       // Error handling
-
       _handleError(event) {
         console.log("commit error" + event.detail);
         // var errorDialog = document.querySelector('#file-upload-widget-error-dialog');
