@@ -350,31 +350,26 @@
         // document.location.reload(true);
         //Polymer.dom(this.root).querySelector('#componentsList').load();
 
-        console.log("receiveFileUpload event.target.parentNode.id:"+event.target.parentNode.id);
+        console.log("receiveFileUpload event.target.parentNode.id:" + event.target.parentNode.id);
 
 
         var statusCode = event.detail.status;
-        console.log("create a file statusCode:"+statusCode); //200
-        console.log("create a file event.detail.statusText:"+event.detail.statusText); //OK
+        console.log("create a file statusCode:" + statusCode); //200
+        console.log("create a file event.detail.statusText:" + event.detail.statusText); //OK
         if(statusCode == '200'){
             // reload the componentsList
 
             //null
             //Polymer.dom(this.root).querySelector('#componentsList').load();
             //console.log("this.$.componentsList.load()");
-            //this.$.projToast.text = 'File created';
+            this.$.projToast.text = 'File created';
         } else {
             //this.$.projToast.text = i18n.getMsg('errorCrePrj');
             //Failed : HTTP error code : 403, error msg: Forbidden
             console.log("fail to create a file:" + event.detail.statusText);
             //this.$.projToast.text = "Fail to create a file.";
         }
-      //  this.$.projToast.open();
-
-
-        // if (this.uploadSuccessCallback) {
-        //   window[this.uploadSuccessCallback](response);
-        // }
+        this.$.projToast.open();
       },
 
       _testButton: function(e){
@@ -403,7 +398,6 @@
         console.log("Polymer.dom(parent).childNodes.length:"+Polymer.dom(parent).childNodes.length);
         console.log("Polymer.dom(this.root).parentNode.id:"+Polymer.dom(this.root).parentNode.id);
         console.log("Polymer.dom(parent).querySelector('#projToast').id:"+Polymer.dom(parent).querySelector('#projToast').id);
-        //console.log("this.$.projToast.id:"+this.$.projToast);
       },
 
 

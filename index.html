@@ -126,6 +126,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 
   </script>
+  <script src="scripts/snap.svg-min.js"></script>
+
 
   <style>
   body {
@@ -142,8 +144,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
 
-
 </head>
+
  <body unresolved class="fullbleed layout vertical">
 
   <template is="dom-bind" id="app">
@@ -153,7 +155,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <!-- Main Area -->
     <paper-scroll-header-panel fixed>
-      <div id="headerContainer">
+      <!-- <div id="headerContainer"> -->
         <!-- Main Toolbar -->
         <paper-toolbar id="mainToolbar">
           <template is="dom-if" if="{{componentPage(route)}}">
@@ -171,11 +173,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </div>
           </template>
           <span class="flex"></span>
+
+          <!-- <openidconnect-signin id="openidconnectSignin" scopes="openid email profile"
+                                client-id="3a2d251c-a7d3-4c62-b63b-d10e1d1c2cb8"
+                                server="https://api.learning-layers.eu/o/oauth2"
+                                is-authorized="{{_authorized}}"
+                                on-openidconnect-signin-aware-success="_handleSigninSuccessApp"
+                                on-openidconnect-signin-aware-signed-out="_handleSignedOut"></openidconnect-signin>
+                              -->
+
           <github-signin id="githubSignInBtn" is-authorized="{{isAuthorized}}" scopes="repo" client-id="b6d65034ff402a6e6f4d" server="https://github.com/login/oauth/authorize" base-href={{baseHref}}></github-signin>
         </paper-toolbar>
-      </div>
+      <!-- </div> -->
 
-      <iron-ajax
+      <!-- <iron-ajax
         id="getCurrentGitHubUser"
         url="{{baseHref}}/getCurrentGitHubUser"
         method="GET"
@@ -184,10 +195,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         on-error = "errorHandler"
         verbose
         last-response="{{currentGitHubUser}}">
+      </iron-ajax> -->
+
+      <iron-ajax
+        id="getCurrentGitHubUser"
+        url="{{baseHref}}/getCurrentGitHubUser"
+        method="GET"
+        headers="{{accessGitHubHeader}}"
+        on-request = "sentRequest"
+        on-error = "errorHandler"
+        on-response="_handleCurrentUserResponse">
       </iron-ajax>
 
       <!-- Main Content -->
-      <div class="content" style="height:100%">
+      <!-- <div class="content" style="height:100%"> -->
+      <div class="content">
         <iron-pages attr-for-selected="data-route" selected="{{route}}" style="height:100%;">
           <section data-route="home" href="{{baseUrl}}" style="height:100%;">
             <projects-list name="projects" id="projectsList" base-href={{baseHref}} is-authorized={{isAuthorized}} org-name={{gitHubOrg}} access-token={{access_token}} ajax-params={{ajaxParamsGitHubOrg}} ajax-header={{header}}></projects-list>
@@ -202,9 +224,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           <section id="projectsSection" data-route="projects" href="{{baseUrl}}projects" style="height:100%;">
 
-            <paper-scroll-header-panel id="scrollProjects" class="flex">
+            <!-- <paper-scroll-header-panel id="scrollProjects" class="flex"> -->
               <projects-list name="projects" id="projectsList" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" org-name="{{gitHubOrg}}" access-token="{{access_token}}" ajax-params="{{ajaxParamsGitHubOrg}}" ajax-header="{{header}}"></projects-list>
-            </paper-scroll-header-panel>
+            <!-- </paper-scroll-header-panel> -->
 
             <template is="dom-if" if="{{isAuthorized}}">
               <paper-fab id="createProjectBtn" class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>
@@ -253,7 +275,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                      last-response="{{projectBranch}}">
           </iron-ajax>
 
-          <paper-scroll-header-panel id="scrollComponents">
+          <!-- <paper-scroll-header-panel id="scrollComponents"> -->
             <paper-material elevation="1">
               <div class="editHeader">
                   <h2>{{project.name}}</h2>
@@ -271,13 +293,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             <components-list id="componentsList" loading="{{loading}}" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" access-token="{{access_token}}"></components-list>
 
-          </paper-scroll-header-panel>
+          <!-- </paper-scroll-header-panel> -->
 
         </section>
 
         <!-- SIGNLE COMPONENTS OF A PROJECT -->
         <section data-route="component-info" href="{{baseUrl}}component-info" style="height:100%;">
-          <component-detail id="componentDetail" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" access-token="{{access_token}}"></component-detail>
+          <component-detail id="componentDetail" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" access-token="{{access_token}}" current-git-hub-user={{currentGitHubUser}}></component-detail>
         </section>
 
 
@@ -289,7 +311,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   </paper-scroll-header-panel>
 </template>
-
 <script src="scripts/app.js"></script>
 <!-- Configure your routes here -->
 <link rel="import" href="elements/routing.html">

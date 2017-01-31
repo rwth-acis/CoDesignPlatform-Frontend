@@ -37,7 +37,9 @@
     "neon-animation": "PolymerElements/neon-animation#^1.2.4",
     "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#^1.4.3",
     "paper-listbox": "PolymerElements/paper-listbox#^1.1.2",
-    "paper-item": "PolymerElements/paper-item#^1.2.1"
+    "paper-item": "PolymerElements/paper-item#^1.2.1",
+    "paper-spinner": "PolymerElements/paper-spinner#^1.2.1",
+    "time-elements": "github/time-elements#^0.6.1"
   },
   "devDependencies": {
     "web-component-tester": "^4.0.0"

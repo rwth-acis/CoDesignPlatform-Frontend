@@ -1,0 +1,64 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<script>
+
+  GlobalConfig = [];
+  GlobalConfig.language = 'en';
+
+  ConfigBehavior = {
+
+    properties: {
+      _apiBaseUrl: {
+        type: String,
+        value: 'https://requirements-bazaar.org/bazaar'
+      },
+
+      _frontendBasePath: {
+        type: String,
+        value: '/'
+      },
+
+      currentUser: {
+        type: String,
+        value: function() { return GlobalConfig.currentUser; },
+        observer: '_currentUserChanged'
+      },
+
+      currentGitHubUser:{
+        type: Object,
+        value: function() { return GlobalConfig.currentGitHubUser; },
+        observer: '_currentGitHubUserChanged'
+      }
+      /**
+       * Defines whether the user is logged in or not.
+       */
+      authorized: {
+        type: Boolean
+      },
+      authHeader: {
+        type: Array
+      }
+    },
+
+    /**
+     * Went for set* method as in the Polymer object, this.currentUser didn't call this setter.
+     *
+     * @param newValue
+     */
+
+    setCurrentGitHubUser: function(newValue){
+      GlobalConfig.currentGitHubUser = newValue;
+    }
+    setCurrentUser: function(newValue) {
+      GlobalConfig.currentUser = newValue;
+    },
+
+    _currentGitHubUserChanged: function(newValue) {
+      console.log("_currentGitHubUserChanged:"+newValue);
+      GlobalConfig.currentGitHubUser = newValue;
+      //this.fire('iron-signal', {name: 'current-user-changed', data: newValue});
+    },
+
+
+  }
+</script>
