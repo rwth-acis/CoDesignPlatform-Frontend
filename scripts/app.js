@@ -273,14 +273,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     return this.baseHref + '/components/' + componentId;
   };
 
-
-  app.branchSelected = function(e){
-    var selectedItem = e.target.selectedItem;
-    if (selectedItem){
-      console.log("selected: " + selectedItem.innerText);
-      this.loadComponentsList(app.currentProject, selectedItem.innerText);
-    }
-  };
   /**
   * Loads the project info page and the components in the master branch
   *
@@ -307,11 +299,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     this.$.projectBranchInfoLoader.params = parameters;
     this.$.projectBranchInfoLoader.generateRequest();
 
-    //this.loadComponentsList(projectName, "master");
+    this.loadComponentsList(projectName, "master");
   };
 
+  app.branchSelected = function(e){
+    var selectedItem = e.target.selectedItem;
+    if (selectedItem){
+      console.log("selected: " + selectedItem.innerText);
+      this.loadComponentsList(app.currentProject, selectedItem.innerText);
+    }
+  };
+  // load the components of the project
   app.loadComponentsList = function(projectName,branchName){
-    // load the components of the project
     var componentsListAjaxParams = {
       org: app.gitHubOrg,
       repo: projectName,
@@ -324,36 +323,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   //load a single component
-  app.loadComponent = function(){
-    /*
-    var name = this.$.componentsList.selectedComponent.name;
-    var componentSha = this.$.componentsList.selectedComponent.sha;
-    var url = this.$.componentsList.selectedComponent.url;
-    var download_url = this.$.componentsList.selectedComponent.download_url;
-    var htmlUrl = this.$.componentsList.selectedComponent.html_url;
-    var original_download_url=  this.$.componentsList.selectedComponent.original_download_url;
-    var org = this.$.componentsList.selectedComponent.org;
-    var repo = this.$.componentsList.selectedCmponent.repo;
-    console.log("original_download_url;"+original_download_url);
-    console.log("this.$.componentsList.selectedComponent.org:"+this.$.componentsList.selectedComponent.org);
+  app.loadComponent = function(params){
 
-    this.$.componentDetail.componentName = name;
-    this.$.componentDetail.componentSha = componentSha;
-    this.$.componentDetail.componentUrl = url;
-    this.$.componentDetail.componentDownloadUrl = download_url
-    this.$.componentDetail.componentHtmlUrl = htmlUrl;
-    this.$.componentDetail.componentOriginalDownloadUrl = original_download_url;
-    this.$.componentDetail.componentOrg = org;
-    this.$.componentDetail.componentRepo = repo;
-    */
+    console.log(params); //projectName, branchName, componentName
+    this.$.componentDetail.orgName = app.gitHubOrg;
+    this.$.componentDetail.projectName = params.projectName;
+    this.$.componentDetail.branchName = params.branchName;
+    this.$.componentDetail.componentName = params.componentName;
+    this.$.componentDetail.load();
+    /*
 
     var selectedComponent = this.$.componentsList.selectedComponent;
-    this.$.componentDetail.componentModel = selectedComponent;
-    console.log("this.$.componentDetail.componentModel.name:" + this.$.componentDetail.componentModel.name);
-    console.log("this.$.componentDetail.componentModel.sha:" + this.$.componentDetail.componentModel.sha);
+    if(selectedComponent.name){ // if the selectedComponent is from previous componentsList page
+      this.$.componentDetail.componentModel = selectedComponent;
+      this.$.componentDetail.load();
+    }else{ // if refresh the componentDetail page
+      //https://api.github.com/repos/Co-Design-Platform/panda/contents/Sad_panda.svg?ref=master
+      this.$.componentDetail.componentModel.name = params.componentName
+    }
+    */
 
 
-    this.$.componentDetail.load();
+
   };
 
   // finding locating dynamically-created nodes
@@ -387,24 +378,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     console.log("make a request detail.request.url:"+detail.request.url);
   };
 
-  /**
-  * Loads the component info page.
-  *
-  * @param componentId the id of the component to load.
-  */
-  app.loadComponentInfo = function(componentId) {
-    // load the basic component info that is shown in the header
-    this.$.componentInfoLoader.url = app.getComponentURL(componentId);
-    this.$.componentInfoLoader.generateRequest();
-
-    // load the components-menu on the left
-    this.$.componentsMenu.componentId = componentId;
-    this.$.componentsMenu.load();
-
-    // load requirements-list
-    this.$.requirementsList.componentId = componentId;
-    this.$.requirementsList.load();
-  };
 
   app.closeCollapses = function(){
     var elems = document.querySelectorAll("iron-collapse");

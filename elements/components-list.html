@@ -1,5 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="stylesheet" href="../styles/main.css">
 
 
 <dom-module id="components-list">
@@ -9,18 +10,32 @@
     display: block;
     padding: 16px;
     box-sizing: border-box;
-
   }
 
   form {
-    @apply(--layout-vertical);
     position: fixed;
     bottom: 0px;
     right: 80px;
     width: 350px;
-    margin-bottom: 0px;
+    margin-bottom: 5px;
     background-color: white;
     max-height: none !important;
+  }
+
+  form > input {
+    height: 30%;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
+  form > paper-button {
+    width: 45%;
+    margin-top: 5px;
+  }
+
+  form > paper-button:not([disabled]) {
+    background: var(--paper-light-blue-500);
+    color: white;
   }
 
   paper-card {
@@ -44,6 +59,13 @@
     bottom: 30px;
     right: 30px;
   }
+
+  #toast {
+    --paper-toast-background-color: red;
+    --paper-toast-color: white;
+  }
+
+
   </style>
 
   <iron-ajax
@@ -93,14 +115,16 @@
 <template is="dom-if" if="{{showFileUploadForm}}">
   <form is="iron-form" id="fileform" name="uploadForm" on-iron-form-presubmit="uploadFile">
     <input label="[[labelFile]]" type="file" name="filecontent" required disabled="[[_uploadingFile]]"/>
-    <input label="[[labelIdentifier]]" type="text" name="identifier" value="{{identifier}}" placeholder="please give a description" required disabled="[[_uploadingFile]]"/>
-    <paper-bon on-click="_submitButton" disabled="[[_uploadingFile]]">[[labelUploadButton]]</paper-button>
-      <paper-button on-click="_cancelButton" disabled="[[_uploadingFile]]">[[labelCancelButton]]</paper-button>
+    <!-- <input label="[[labelIdentifier]]" type="text" name="identifier" value="{{identifier}}" placeholder="please give a description" required disabled="[[_uploadingFile]]"/> -->
+    <paper-input id="uploadMessage" name="uploadMessage" label="[[labelIdentifier]]" type="text" value="{{identifier}}" placeholder="please give a description" required disabled="[[_uploadingFile]]"/></paper-input>
+    <paper-button raised on-tap="_submitButton" disabled="[[_uploadingFile]]">[[labelUploadButton]]</paper-button>
+    <paper-button raised on-tap="_cancelButton" disabled="[[_uploadingFile]]">[[labelCancelButton]]</paper-button>
       <!-- <paper-button id="testButton" on-click="_testButton" disabled="[[_uploadingFile]]">[[labelTestButton]]</paper-button> -->
     </form>
   </template>
 
-  <paper-toast id="toast" text=""></paper-toast>
+  <paper-toast id="toast" duration="3500" text="">
+  </paper-toast>
 
 </template>
 
@@ -121,7 +145,8 @@
         type: String,
       },
       showFileUploadForm:{
-        type: Boolean
+        type: Boolean,
+        reflectToAttribute: true
       },
       // ajax attributes initialized in app.js
       // e.g. this.$.componentsList.projectContentsUrl
@@ -228,7 +253,7 @@
       Polymer.dom(event).localTarget.parentElement.submit();
       event.currentTarget.parentNode.reset();
     },
-    _cancelButto: function(event){
+    _cancelButton: function(event){
       event.currentTarget.parentNode.reset();
       this.showFileUploadForm = false;
     },
@@ -252,7 +277,10 @@
       var form = Polymer.dom(event).localTarget;
       var elements = form.elements;
       var fileName = form.elements.filecontent.files[0].name;
-      var message = form.elements["identifier"].value;
+      // var message = form.elements.uploadMessage.value; // cannot work when using paper-input,
+      // because paper-input is not in form.elements()
+
+      var message = form.querySelector('#uploadMessage').value;
       var reader = new FileReader();
       var blob = form.elements.filecontent.files[0];
       reader.readAsArrayBuffer(blob);
@@ -260,7 +288,6 @@
 
       reader.onload = function () {
         var base64Content = that.arrayBufferToBase64(reader.result);
-        //that.ajaxSendFile(fileName,message,base64Content);
         that.sendFile(fileName,message,base64Content);
       }
     },
@@ -314,7 +341,7 @@
       this.selectedComponent["branch"] = this.ajaxParams.branch;
       // repo:
       //this.selectedComponent = e.model;
-      page('/projects/'+ this.projectName +'/components/' + model.item.name);
+      page('/projects/'+ this.projectName +'/components/' + this.selectedComponent.branch + '/' + this.selectedComponent.name);
     },
 
 

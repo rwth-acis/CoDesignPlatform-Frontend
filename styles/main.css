@@ -1,26 +1,24 @@
 html, body {
   height: 100%;
+  margin: 0;
 }
 
-/*paper-scroll-header-panel {
-  height: 100%;
-/*}*/
 paper-scroll-header-panel {
       position: absolute;
       top: 0;
       right: 0;
       bottom: 0;
       left: 0;
-      background-color: var(--paper-grey-200, #eee);;
-    }
-
-paper-scroll-header-panel .content {
-     padding: 55px;
+      background-color: var(--paper-grey-200, #eee);
+      height: 100%;
 }
-
 paper-toolbar{
-  color: #fff;
+      color: #fff;
 }
+paper-scroll-header-panel .content {
+     padding: 50px;
+}
+
 
 paper-fab {
     position: fixed;
@@ -56,6 +54,8 @@ paper-material {
     margin: 16px auto;
     background: white;
 }
+
+
 
 :host {
   --app-primary-color: #4285f4;

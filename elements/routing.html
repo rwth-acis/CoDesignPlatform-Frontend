@@ -79,7 +79,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             app.loadProjectInfo(data.params.projectName);
         });
 
-        page('/projects/:projectName/components/:componentName', function(data) {
+        page('/projects/:projectName/components/:branchName/:componentName', function(data) {
             //if (app.compChanged(data.params.componentId)){
             //     app.route = 'component-info';
             //     app.params = data.params;
@@ -89,12 +89,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             // }
                app.route = 'component-info';
                console.log("app.route:"+app.route);
-               console.log("data.params.projectName:"+data.params.projectName);
-               console.log("data.params.componentName:"+data.params.componentName);
-               //console.log("data.params.componentUrl:"+data.params.componentUrl);
-               app.params = data.params;
-               app.loadComponent();
-
+               console.log(data.params);
+               app.loadComponent(data.params);
         });
 
         page('/projects/:projectId/components/:componentId/create', function(data) {

@@ -146,15 +146,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 </head>
 
- <body unresolved class="fullbleed layout vertical">
+ <!-- <body unresolved class="fullbleed layout vertical"> -->
 
+<body unresolved>
   <template is="dom-bind" id="app">
 
   <!--<github-signin-aware is-authorized="{{isAuthorized}}" on-github-signin-aware-success="handleSigninSuccess"></github-signin-aware>-->
     <paper-toast id="superToast"></paper-toast>
 
     <!-- Main Area -->
-    <paper-scroll-header-panel fixed>
+    <paper-scroll-header-panel fixed>>
       <!-- <div id="headerContainer"> -->
         <!-- Main Toolbar -->
         <paper-toolbar id="mainToolbar">
@@ -209,7 +210,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       <!-- Main Content -->
       <!-- <div class="content" style="height:100%"> -->
-      <div class="content">
+      <div class="content" style="height:100%;">
         <iron-pages attr-for-selected="data-route" selected="{{route}}" style="height:100%;">
           <section data-route="home" href="{{baseUrl}}" style="height:100%;">
             <projects-list name="projects" id="projectsList" base-href={{baseHref}} is-authorized={{isAuthorized}} org-name={{gitHubOrg}} access-token={{access_token}} ajax-params={{ajaxParamsGitHubOrg}} ajax-header={{header}}></projects-list>
@@ -247,7 +248,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <paper-button dialog-dismiss>Cancel</paper-button>
                 <paper-button dialog-confirm autofocus>Save</paper-button>
               </div>
-          </paper-dialog>
+            </paper-dialog>
 
           <iron-ajax
               id="postProjectRequest"

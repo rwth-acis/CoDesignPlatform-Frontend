@@ -1,6 +1,5 @@
-<!-- <link rel="import" href="../bower_components/polymer/polymer.html"> -->
+<link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
-<link rel="import" href="../bower_components/las2peer-comment-thread-widget/las2peer-comment-thread-widget.html">
 
 <dom-module id="component-detail">
   <template>
@@ -8,7 +7,7 @@
   :host {
     display: block;
     padding: 16px;
-
+    height: 100%;
   }
 
   paper-card {
@@ -34,35 +33,77 @@
   }
 
   form {
-    @apply(--layout-vertical);
     position: fixed;
     bottom: 0px;
     right: 80px;
     width: 350px;
-    margin-bottom: 0px;
+    margin-bottom: 5px;
     background-color: white;
     max-height: none !important;
   }
 
+  form > input {
+    height: 30%;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
 
+  form > paper-button {
+    width: 45%;
+    margin-top: 5px;
+  }
 
+  form > paper-button:not([disabled]) {
+    background: var(--paper-light-blue-500);
+    color: white;
+  }
+
+  paper-material {
+    background: transparent;
+    height: calc(100% - 60px);
+    width: calc(100% - 60px);
+    margin: auto;
+  }
+
+  #svgOut {
+    margin: auto;
+    height: 100%;
+    width: 100%;
+    display: block;
+  }
+/*will let svg center, but cannot set this, otherwise highlightEl will wrong
   svg {
-     position: fixed;
-     bottom: 0px;
-     right: 80px;
-     width: calc(98.66% - 16px);
-     height: calc(98.66% - 16px);
+    display: block;
+    /*margin: auto;
+    height: 100%;
+    width: 100%;
+  }
+*/
+
+
+  #toast {
+    --paper-toast-background-color: red;
+    --paper-toast-color: white;
   }
 
   </style>
-  <!-- <canvas id="canvas1" width="400" height="400"></canvas> -->
+
+  <iron-ajax
+  id="componentInfoLoader"
+  handle-as="json"
+  url="{{baseHref}}/componentinfo"
+  content-type="application/json"
+  method="GET"
+  on-request="_sentRequest"
+  on-response="_handleComponentInfoResponse"
+  on-error="_handleError"></iron-ajax>
+
   <iron-ajax
   id="svgContentLoader"
   url="{{baseHref}}\getsvgcontent"
   handle-as="xml"
   on-request="_sentRequest"
-  on-response="_handleSvgContentResponse"
-  loading="{{loading}}"></iron-ajax>
+  on-response="_handleSvgContentResponse"></iron-ajax>
 
   <iron-ajax
   id="updateFileRequest"
@@ -72,7 +113,7 @@
   method="POST"
   on-request="_sentRequest"
   on-response="_receiveFileUpload"
-  on-error="_handleError"></iron-ajax>
+  on-error="_handleUpdateError"></iron-ajax>
 
   <iron-ajax
   id="createCommentRequest"
@@ -84,33 +125,35 @@
   on-response="_receiveCreateCommentResponse"
   on-error="_handleCreateCommentError"></iron-ajax>
 
+
+  <paper-dialog id="commentsDialog" on-iron-overlay-closed="deleteLeftoverComment" entry-animation="fade-in-animation" exit-animation="fade-out-animation"
+  style="min-width:40%; max-width:85%; top:100px; max-height: 80%; overflow:scroll;">
+  <h2 id="comment">Annotations</h2>
+  </paper-dialog>
+
   <template is="dom-if" if="{{isAuthorized}}">
     <paper-fab id="updateFileBtn" class="fabAdd" on-tap="onUpdateFileTap" icon="update"></paper-fab>
   </template>
 
+  <paper-material elevation="1">
+    <!-- <svg id="svgOut"></svg> -->
+    <div id="svgOut"></div>
+  </paper-material>
+  <!-- <las2peer-comment-thread-widget id="commentsWidget" login-name="[[currentGitHubUser.login]]" login-password="[[currentGitHubUser.email]]"></las2peer-comment-thread-widget> -->
+
+
+
   <template is="dom-if" if="{{showFileUpdateForm}}">
     <form is="iron-form" id="fileform" name="updateForm" on-iron-form-presubmit="updateFile">
-      <input label="[[labelFile]]" type="file" name="filecontent" required disabled="[[_updateingFile]]"/>
-      <input label="[[labelIdentifier]]" type="text" name="identifier" value="{{identifier}}" placeholder="please give a description" required disabled="[[_updateingFile]]"/>
-      <paper-bon on-click="_submitButton" disabled="[[_updateingFile]]">[[labelupdateButton]]</paper-button>
-      <paper-button on-click="_cancelButton" disabled="[[_updateingFile]]">[[labelCancelButton]]</paper-button>
-      <!-- <paper-button id="testButton" on-click="_testButton" disabled="[[_updateingFile]]">[[labelTestButton]]</paper-button> -->
+      <input label="[[labelFile]]" type="file" name="filecontent" required disabled="[[_updatingFile]]"/>
+      <paper-input id="updateMessage" name="updateMessage" label="[[labelIdentifier]]" type="text" value="{{identifier}}" placeholder="please give a description" required disabled="[[_updatingFile]]"/></paper-input>
+      <paper-button raised on-tap="_submitButton" disabled="[[_updatingFile]]">[[labelupdateButton]]</paper-button>
+      <paper-button raised on-tap="_cancelButton">[[labelCancelButton]]</paper-button>
     </form>
   </template>
 
-  <las2peer-comment-thread-widget id="comments">
-  </las2peer-comment-thread-widget>
-
-  <paper-dialog id="commentsDialog" on-iron-overlay-closed="deleteLeftoverComment" entry-animation="fade-in-animation" exit-animation="fade-out-animation"
-  style="min-width:40%; max-width:85%; top:100px; max-height: 80%; overflow:scroll;">
-    <h2 id="comment">Annotations</h2>
-  </paper-dialog>
-
-  <svg id="svgout"></svg>
-  <!-- <paper-material elevation="1">
-
-  </paper-material> -->
-  <paper-toast id="toast" text=""></paper-toast>
+  <paper-toast id="toast" duration="3500" text="">
+  </paper-toast>
 
 </template>
 
@@ -122,19 +165,19 @@
     is: 'component-detail',
 
     properties: {
-      projectId: {
-        type: Number
-      },
       accessToken:{
         type: String,
       },
-      projectContentsUrl:{
+      orgName:{
         type: String
       },
-      ajaxParams:{
-        type: Object
+      projectName:{
+        type: String
       },
-      projectTreeUrl:{
+      branchName:{
+        type: String
+      },
+      componentName:{
         type: String
       },
       resourceURL: {
@@ -149,9 +192,6 @@
         type: Boolean,
         notify: true
       },
-      projectName:{
-        type: String
-      },
       currentGitHubUser:{
         type: Object
       },
@@ -160,25 +200,10 @@
       },
       showFileUpdateForm:{
         type: Boolean,
-        notify: true
+        reflectToAttribute: true
       },
       componentModel:{
         type: Object
-      },
-      componentName:{
-        type: String
-      },
-      componentUrl:{
-        type: String
-      },
-      componentSha:{
-        type: String
-      },
-      componentHtmlUrl:{
-        type: String
-      },
-      componentDownloadUrl:{
-        type:String
       },
       componentOriginalDownloadUrl :{
         type: String
@@ -222,11 +247,7 @@
         type: String,
         value: 'Cancel'
       },
-      labelTestButton: {
-        type: String,
-        value: 'Test'
-      },
-      _updateingFile: {
+      _updatingFile: {
         type: Boolean,
         value: false
       },
@@ -258,41 +279,45 @@
 
     load: function() {
 
-      //http://stackoverflow.com/questions/3768565/drawing-a-svg-file-on-a-html5-canvas
-      // var can = this.$.canvas1;
-      // var ctx = can.getContext('2d');
-      // var img = new Image();
-      // img.onload = function() {
-      //   ctx.drawImage(img, 0, 0);
-      // }
-      // img.src = componentUrl;
-      //
 
       //this.setThread();
-      this.setUser();
+      //this.setUser();
 
-      // var svtoutNode = this.$.svgout;
-      // while (svtoutNode.firstChild) {
-      //   svtoutNode.removeChild(svtoutNode.firstChild);
-      // }
-      var svtoutNode = this.$.snapElement;
-      if(svtoutNode){
-        console.log("svtoutNode id:"+svtoutNode.id);
-        while (svtoutNode.firstChild) {
-          svtoutNode.removeChild(svtoutNode.firstChild);
+
+      // load this component's info
+      var header = {Authorization: this.accessToken};
+      var params =  {
+        org: this.orgName,
+        repo: this.projectName,
+        branch: this.branchName,
+        path: this.componentName
+      };
+      this.$.componentInfoLoader.headers = header;
+      this.$.componentInfoLoader.params = params;
+      this.$.componentInfoLoader.generateRequest();
+
+      // clean previous drawing svg node
+      var svgOutNode = this.$.svgOut;
+      if(svgOutNode){
+        console.log("clean previous drawing svg node");
+        while (svgOutNode.firstChild) {
+          console.log("clean firstChild svg node");
+          svgOutNode.removeChild(svgOutNode.firstChild);
         }
       }
 
-
-      this.$.svgContentLoader.params = {svgurl: this.componentModel.original_download_url};
-
-      this.$.svgContentLoader.generateRequest();
-
-
     },
 
-    onUpdateFileTap: function(e) {
+    onUpdateFileTap: function(e){
       this.showFileUpdateForm = true;
+    },
+
+    _handleComponentInfoResponse: function(event){
+      this.componentModel = event.detail.response
+
+      // load SVG content
+      this.$.svgContentLoader.params = {svgurl: this.componentModel.download_url};
+      this.$.svgContentLoader.generateRequest();
     },
 
 
@@ -304,37 +329,30 @@
       this.svgText = new XMLSerializer().serializeToString(response); // from xml to string
       //this.$.svgContent.innerHTML = this.svgText;
 
-      var w = window.innerWidth;
-      var h = window.innerHeight;
-
-      console.log("window inner w&h:"+w+","+h);
-
+      // var w = window.innerWidth;
+      // var h = window.innerHeight;
+      // console.log("window inner w&h:"+w+","+h);
       //var s = Snap(w,h); // will automatically create a svg element, but  outside polymer component
       //var p = Snap.parse(this.svgText);
       //var g = s.group().append(p);
 
       // 目前最大問題
       // Snap(w,h) 會把SVG 生在web component之外
-      // Snap(this.$.svgout); 好像又抓不到click event  好像是抓不到this.$.svgout
-      var domElement = this.$.svgout;
+      // Snap(this.$.svgOut); 好像又抓不到click event  好像是抓不到this.$.svgOut
+
+
+      var domElement = this.$.svgOut;
       var s = Snap(domElement);
       var fragment = Snap.parse(this.svgText);
       var g = s.append(fragment);
 
 
-      //this.$.svgout.appendChild(s.node); //cannot use, otherwise Snap.getElementByPoint cannot get the correct result
+      //this.$.svgOut.appendChild(s.node); //cannot use, otherwise Snap.getElementByPoint cannot get the correct result
       var that = this;
       // g.click(this.svgClick); // not working because of this scope, maybe need to use bind?
       g.click(function(e){
-          that.getEventElement(e);
+        that.getEventElement(e);
         /*
-        console.log("(e.clientX, e.clientY):"+e.clientX+", "+ e.clientY);
-        var element = Snap.getElementByPoint(e.clientX, e.clientY);
-        console.log(element);
-        var elementId = element.attr("id");
-        console.log("click element id:" + elementId);
-        element.attr({a:"www.google.com"});
-
 
         var commentRequest = that.$.createCommentRequest;
         console.log("that.currentGitHubUser.login:" + that.currentGitHubUser.login);
@@ -347,227 +365,298 @@
 
         commentRequest.headers = header;
         commentRequest.body = JSON.stringify({
-          "owner": that.currentGitHubUser.login,
-          "writer": "User B, User C",
-          "reader": "User D"
-        });
-        //commentRequest.setRequestHeader("Authorization", "Basic " + btoa("User A:userAPass"));
-        //xhttp.send('{owner:"User A", writer:"User B,User C", reader:"User D"}');
-        //commentRequest.generateRequest();
-
-
-        var commentsDialogNode = that.$.commentsDialog;
-        commentsDialogNode.querySelector("#comment").innerHTML = elementId+"'s Annotations: "+element.attr("a");
-        commentsDialogNode.open();
-        */
+        "owner": that.currentGitHubUser.login,
+        "writer": "User B, User C",
+        "reader": "User D"
       });
+      //commentRequest.setRequestHeader("Authorization", "Basic " + btoa("User A:userAPass"));
+      //xhttp.send('{owner:"User A", writer:"User B,User C", reader:"User D"}');
+      //commentRequest.generateRequest();
 
-    },
 
-    //SVG click&highlight code reference: http://svg.dabbles.info/snaptut-loadselect-move
-    getEventElement: function(e){
-      if( e.target.localName == 'svg' ) { return; };
-      var snapEl = Snap(e.target);
-      //console.log(snapEl);
-      var elementId = snapEl.node.id;
-      firstSelectedEl = snapEl;
-      var commentsDialogNode = this.$.commentsDialog;
-      commentsDialogNode.querySelector("#comment").innerHTML = elementId+"'s Annotations";
+      var commentsDialogNode = that.$.commentsDialog;
+      commentsDialogNode.querySelector("#comment").innerHTML = elementId+"'s Annotations: "+element.attr("a");
       commentsDialogNode.open();
-      this.highlightEl(snapEl);
-    },
+      */
+    });
 
-    highlightEl: function(el){
-        //if( lastSelectedEl ) { lastSelectedEl.undrag(); }
-        if( this.highlightRect ) { this.highlightRect.remove(); }
-        var domElement = this.$.svgout;
-        var s = Snap(domElement);
-        this.highlightRect = s.rect( this.rectObjFromBB( el.getBBox(1) ) )
-                        .attr({ fill: "none", stroke: "red", strokeDasharray: "5,5" });
-        this.highlightRect.transform( el.transform().global.toString() );
-        this.lastSelectedEl = el;
-    },
+  },
 
-    rectObjFromBB: function(bb){
-        return { x: bb.x, y: bb.y, width: bb.width, height: bb.height }
-    },
+  //SVG click&highlight code reference: http://svg.dabbles.info/snaptut-loadselect-move
+  getEventElement: function(e){
+    console.log(e);
+    if( e.target.localName == 'svg' ) { return; };
+    var snapEl = Snap(e.target);
+    console.log(snapEl);
 
+    var elementId = snapEl.node.id;
+    firstSelectedEl = snapEl;
 
-    _receiveCreateCommentResponse: function(event){
-      console.log(event.target.lastResponse);
-      localStorage.setItem("thread", event.target.lastResponse);
-      setThread();
-//
-    },
+    //snapEl.node.attr({a:"www.google.com"}); // doen't work
+    // snapEl.node is an DOM element
+    var s = Snap(snapEl);
+    s.attr({a:"www.google.com"});
+    console.log(s);
 
-     setThread: function() {
-      var comments = this.$.comments;
+    var commentsDialogNode = this.$.commentsDialog;
+    commentsDialogNode.querySelector("#comment").innerHTML = elementId+", "+ s.attr("a") ;
+    commentsDialogNode.open();
 
-      if (localStorage.getItem("thread") != undefined) {
-        comments.setAttribute("thread", localStorage.getItem("thread"))
-      }
-      // else {
-      //   createThread();
-      // }
-    },
-    setUser: function() {
-      //var currentUser = userSelector.options[userSelector.selectedIndex].value
-      var comments = this.$.comments;
-      var currentUser = this.currentGitHubUser.login;
-      var currentUserPass = this.currentGitHubUser.email;
-
-      if (currentUser != "anonymous") {
-        comments.setAttribute("login-name", currentUser);
-        comments.setAttribute("login-password", currentUserPass);
-      }
-      else {
-        comments.removeAttribute("login-name");
-        comments.removeAttribute("login-password");
-      }
-
-    },
+    var newSvgContent = this.$.svgOut.firstElementChild;
+    console.log(newSvgContent);
 
 
-/* not working: maybe use bind?
-    svgClick: function(e){
-      console.log("click position:" + e.clientX+","+e.clientY);
-      var element = Snap.getElementByPoint(e.clientX, e.clientY);
-      var elementId = element.attr("id")
-      console.log("click element id:" + elementId);
-      element.attr({a:"www.google.com"});
-      //console.log("e.target.id:"+e.target.id); //undefined
-      console.log("this:"+this); //the whole SVG DOM => the reason that the following code doesn't work
+    this.highlightEl(snapEl);
 
-      var commentsDialogNode = this.$$('#commentsDialog'); //cannot find the node
-      console.log("this.$$('#commentsDialog').id:"+commentsDialogNode.id);
-      commentsDialogNode.querySelector("#comment").innerHTML = element.attr.id+"'s Annotations'";
-      commentsDialogNode.open();
-    },
-    */
+    this.testAddSvgAttr(newSvgContent,elementId);
+    //this.createElementComment();
 
-    _submitButton: function(event) {
-      Polymer.dom(event).localTarget.parentElement.submit();
-      event.currentTarget.parentNode.reset();
-    },
-    _cancelButton: function(event){
-      event.currentTarget.parentNode.reset();
-      this.showFileUpdateForm = false;
-    },
+  },
 
+  testAddSvgAttr: function(newContent,elementId){
+    var newContentString = new XMLSerializer().serializeToString(newContent); // from xml to string
+    var fileContent = btoa(newContentString); // from string to base64
+    var fileName = this.componentModel.name;
+    this._sendFile(fileName,"add comment to element:"+elementId,fileContent);
+  },
 
+  highlightEl: function(el){
+    //if( lastSelectedEl ) { lastSelectedEl.undrag(); }
+    if( this.highlightRect ) { this.highlightRect.remove(); }
+    var domElement = this.$.svgOut.querySelector("svg");
+    var s = Snap(domElement);
 
-    // Convert arraybuffer to base64
-    // http://stackoverflow.com/questions/9267899/arraybuffer-to-base64-encoded-string
-    _arrayBufferToBase64: function(buffer) {
-      var binary = '';
-      var bytes = new Uint8Array( buffer );
-      var len = bytes.byteLength;
-      for (var i = 0; i < len; i++) {
-        binary += String.fromCharCode( bytes[ i ] );
-      }
-      return window.btoa( binary );
-    },
+    this.highlightRect = s.rect( this.rectObjFromBB( el.getBBox(1) ) )
+    .attr({ id:"annotation", fill: "none", stroke: "red", strokeDasharray: "5,5" });
+    this.highlightRect.transform( el.transform().global.toString() );
+    this.lastSelectedEl = el;
+  },
 
-    // Send requests
-    updateFile(event) {
-      event.preventDefault();
-      var form = Polymer.dom(event).localTarget;
-      var elements = form.elements;
-      var fileName = form.elements.filecontent.files[0].name;
-      var message = form.elements["identifier"].value;
-      var reader = new FileReader();
-      var blob = form.elements.filecontent.files[0];
-      reader.readAsArrayBuffer(blob);
-      var that = this;
+  rectObjFromBB: function(bb){
+    return { x: bb.x, y: bb.y, width: bb.width, height: bb.height }
+  },
 
-      reader.onload = function () {
-        var base64Content = that._arrayBufferToBase64(reader.result);
-        //that.ajax_sendFile(fileName,message,base64Content);
-        that._sendFile(fileName,message,base64Content);
-      }
-    },
+  createElementComment: function(){
+    var commentRequest = this.$.createCommentRequest;
+    console.log("that.currentGitHubUser.login:" + this.currentGitHubUser.login);
+    console.log("that.currentGitHubUser.email:" + this.currentGitHubUser.email);
 
-    // send file via backend service to GitHub
-    _sendFile: function(fileName,message,fileContent) {
-      var updateRequest = this.$.updateFileRequest;
-      //console.log("_sendFile this.accessToken:"+this.accessToken);
-      var header = {Authorization: this.accessToken};
-      var parameters = {
-        // org: this.ajaxParams.org, //ajaxParams defined in app.js
-        // repo: this.ajaxParams.repo,
-        org: this.componentModel.org,
-        repo: this.componentModel.repo,
-        path: fileName,
-      };
-      updateRequest.headers = header;
-      updateRequest.params = parameters;
-      // "sha": this.componentSha,
+    var authUser = this.currentGitHubUser.login + ":" + this.currentGitHubUser.email;
+    //var header = {Authorization: "Basic " + btoa(authUser)};
+    //xhttp.setRequestHeader("Authorization", "Basic " + btoa("User A:userAPass"));
+    //xhttp.send('{owner:"User A", writer:"User B,User C", reader:"User D"}');
+    var header = {Authorization: "Basic " + btoa("User A:userAPass")};
+    commentRequest.headers = header;
+    commentRequest.body = JSON.stringify({
+      "owner": "User A",
+      "writer": "User B,User C",
+      "reader": "User D"
+    });
 
-      console.log("update branch:"+this.componentModel.branch);
-      console.log("update sha:"+this.componentModel.sha);
-      updateRequest.body = JSON.stringify({
-        "branch": this.componentModel.branch,
-        "sha": this.componentModel.sha,
-        // "sha": this.componentSha,
-        "message": message,
-        "content": fileContent
-      });
-      console.log("update branch:"+updateRequest.body.branch);
-      console.log("update sha:"+updateRequest.body.sha);
-      updateRequest.generateRequest();
-    },
+    //commentRequest.setRequestHeader("Authorization", "Basic " + btoa("User A:userAPass"));
+    //xhttp.send('{owner:"User A", writer:"User B,User C", reader:"User D"}');
+    commentRequest.generateRequest();
+  },
 
-    _receiveFileUpload: function(event){
-      var response = event.target.lastResponse;
-      this.showFileUploadForm = false;
+  _receiveCreateCommentResponse: function(event){
+    console.log(event.target.lastResponse);
+    localStorage.setItem("thread", event.target.lastResponse);
 
-      var statusCode = event.detail.status;
-      console.log("create a file statusCode:"+statusCode); //200
-      console.log("create a file event.detail.statusText:"+event.detail.statusText); //OK
+    var commentsDialogNode = this.$.commentsDialog;
 
-      if(statusCode == '200' || statusCode == '201'){
-        console.log("update success");
-        // reload the componentsList
-        this.load();
-        this.$.toast.text = 'Update Success';
-      }else{ // will be handled in _handleError
-        //Failed : HTTP error code : 422
-        console.log("fail to create a file: " + event.detail.statusText);
-        console.log("response.errorStreamString: " + response.errorStreamString);
-        console.log("response.responseCode: " + response.responseCode);
-        console.log("response.responseMessage: " + response.responseMessage);
+    var elementIdtemp = commentsDialogNode.querySelector("#comment").innerHTML;
+    console.log(elementIdtemp);
+    var responseThreadID = "'s Annotations:"+ event.target.lastResponse;
+    var res = elementIdtemp.concat(responseThreadID);
+    console.log(res);
+    //commentsDialogNode.querySelector("#comment").innerHTML = responseThreadID;
+    //commentsDialogNode.open();
+    this.setThread();
+  },
 
-        this.$.toast.text =('Update File Fail: '+event.detail.statusText);
-      }
-      this.$.toast.open();
-    },
+  setThread: function(){
+    var comments = this.$.commentsWidget;
 
-    _handleError: function(e, detail) {
-      console.log(detail.request.status); //the status code, e.g. 422
-      console.log(detail.request.statusText);  //the error status text, here is empty
-      console.log(e.detail.request.xhr.response); // the whole reponse object
-      console.log(e.detail.request.xhr.response.responseMessage); // e.g.Unprocessable Entity
+    if (localStorage.getItem("thread") != undefined) {
+      comments.setAttribute("thread", localStorage.getItem("thread"))
+    }
+    // else {
+    //   createThread();
+    // }
+  },
 
-      this.$.toast.text =("Update File Fail");
-      this.$.toast.open();
-    },
+  setUser: function(){
+    //var currentUser = userSelector.options[userSelector.selectedIndex].value
+    var widget = this.$.commentsWidget;
+    var currentUser = this.currentGitHubUser.login;
+    var currentUserPass = this.currentGitHubUser.email;
 
-    _handleCreateCommentError: function(e, detail){
-      console.log(detail.request.status); //the status code, e.g. 422
-      console.log(detail.request.statusText);  //the error status text, here is empty
-      console.log(e.detail.request.xhr.response); // the whole reponse object
-      console.log(e.detail.request.xhr.response.responseMessage); // e.g.Unprocessable Entity
+    if (currentUser != "anonymous") {
+      widget.setAttribute("login-name", currentUser);
+      widget.setAttribute("login-password", currentUserPass);
+    }
+    else {
+      widget.removeAttribute("login-name");
+      widget.removeAttribute("login-password");
+    }
 
-      this.$.toast.text =("Create Comment Fail");
-      this.$.toast.open();
-    },
-    // for debug
-    _sentRequest: function(e, detail){
-      console.log("componenet-detail make a request detail.request.url:"+detail.request.url);
-    },
+    console.log(widget);
+
+  },
 
 
+  /* not working: maybe use bind?
+  svgClick: function(e){
+  console.log("click position:" + e.clientX+","+e.clientY);
+  var element = Snap.getElementByPoint(e.clientX, e.clientY);
+  var elementId = element.attr("id")
+  console.log("click element id:" + elementId);
+  element.attr({a:"www.google.com"});
+  //console.log("e.target.id:"+e.target.id); //undefined
+  console.log("this:"+this); //the whole SVG DOM => the reason that the following code doesn't work
+
+  var commentsDialogNode = this.$$('#commentsDialog'); //cannot find the node
+  console.log("this.$$('#commentsDialog').id:"+commentsDialogNode.id);
+  commentsDialogNode.querySelector("#comment").innerHTML = element.attr.id+"'s Annotations'";
+  commentsDialogNode.open();
+},
+*/
+
+_submitButton: function(event) {
+  Polymer.dom(event).localTarget.parentElement.submit();
+  event.currentTarget.parentNode.reset();
+},
+
+_cancelButton: function(event){
+  console.log("detail update button cancel");
+  event.currentTarget.parentNode.reset();
+  this.showFileUpdateForm = false;
+},
+
+
+
+// Convert arraybuffer to base64
+// http://stackoverflow.com/questions/9267899/arraybuffer-to-base64-encoded-string
+_arrayBufferToBase64: function(buffer) {
+  var binary = '';
+  var bytes = new Uint8Array( buffer );
+  var len = bytes.byteLength;
+  for (var i = 0; i < len; i++) {
+    binary += String.fromCharCode( bytes[ i ] );
+  }
+  return window.btoa( binary );
+},
+
+// Send requests
+updateFile(event) {
+  event.preventDefault();
+  var form = Polymer.dom(event).localTarget;
+  var elements = form.elements;
+  var fileName = form.elements.filecontent.files[0].name;
+  var message = form.querySelector('#updateMessage').value;
+
+  // check if update File name is the same with this component
+  if(fileName == this.componentModel.name){
+    var reader = new FileReader();
+    var blob = form.elements.filecontent.files[0];
+    reader.readAsArrayBuffer(blob);
+    var that = this;
+    reader.onload = function () {
+      var base64Content = that._arrayBufferToBase64(reader.result);
+      that._sendFile(fileName,message,base64Content);
+    }
+  }else{
+    this.$.toast.text = ("File name not match. Please update the same file.");
+    this.$.toast.open();
+  }
+},
+
+// send file via backend service to GitHub
+_sendFile: function(fileName,message,fileContent) {
+  var updateRequest = this.$.updateFileRequest;
+  var header = {Authorization: this.accessToken};
+  var parameters = {
+    org: this.orgName,
+    repo: this.projectName,
+    path: fileName,
+  };
+  updateRequest.headers = header;
+  updateRequest.params = parameters;
+
+  console.log("update branch:"+this.branchName);
+  console.log("update sha:"+this.componentModel.sha);
+  updateRequest.body = JSON.stringify({
+    "branch": this.branchName,
+    "sha": this.componentModel.sha,
+    "message": message,
+    "content": fileContent
   });
+  console.log("update body:"+updateRequest.body);
+  console.log("update branch:"+updateRequest.body.branch);
+  console.log("update sha:"+updateRequest.body.sha);
+  updateRequest.generateRequest();
+},
+
+_receiveFileUpload: function(event){
+  var response = event.target.lastResponse;
+  this.showFileUploadForm = false;
+
+  var statusCode = event.detail.status;
+  console.log("create a file statusCode:"+statusCode); //200
+  console.log("create a file event.detail.statusText:"+event.detail.statusText); //OK
+
+  if(statusCode == '200' || statusCode == '201'){
+    console.log("update success");
+    //this.load();
+    this.$.toast.text = 'Update Success';
+  }else{ // will be handled in _handleUpdateError
+    //Failed : HTTP error code : 422
+    console.log("fail to create a file: " + event.detail.statusText);
+    console.log("response.errorStreamString: " + response.errorStreamString);
+    console.log("response.responseCode: " + response.responseCode);
+    console.log("response.responseMessage: " + response.responseMessage);
+
+    this.$.toast.text =('Update File Fail: '+event.detail.statusText);
+  }
+  this.$.toast.open();
+},
+
+_handleUpdateError: function(e, detail) {
+  console.log(detail.request.status); //the status code, e.g. 422, 409
+  console.log(detail.request.statusText);  //the error status text, here is empty
+  console.log(e.detail.request.xhr.response); // the whole reponse object
+  console.log(e.detail.request.xhr.response.responseMessage); // e.g.Unprocessable Entity
+
+  if(detail.request.status =='409')
+  {
+    this.$.toast.text = ("Update File Fail: File name conflict");
+  }
+  else{
+    this.$.toast.text = ("Update File Fail");
+  }
+  this.$.toast.open();
+},
+
+_handleCreateCommentError: function(e, detail){
+  console.log(detail.request.status); //the status code, e.g. 422
+  console.log(detail.request.statusText);  //the error status text, here is empty
+  console.log(e.detail.request.xhr.response); // the whole reponse object
+  console.log(e.detail.request.xhr.response.responseMessage); // e.g.Unprocessable Entity
+
+  this.$.toast.text =("Create Comment Fail");
+  this.$.toast.open();
+},
+
+_handleError: function(e, detail){
+  console.log(detail);
+},
+// for debug
+_sentRequest: function(e, detail){
+  console.log("componenet-detail make a request detail.request.url:"+detail.request.url);
+},
+
+
+});
 })();
 </script>
 
