@@ -13,7 +13,7 @@
 <dom-module id="github-signin">
   <link rel="import" type="css" href="github-signin.css">
   <template>
-    <github-signin-aware id="aware"
+    <github-signin-aware id="gitHubAware"
       base-href="{{baseHref}}"
       app-package-name="{{appPackageName}}"
       server="{{server}}"
@@ -91,8 +91,8 @@
      * @enum {string}
      */
     var LabelValue = {
-      STANDARD: 'Sign in',
-      WIDE: 'Sign in with OpenID Connect'
+      STANDARD: 'GitHub Sign in',
+      WIDE: 'Sign in with GitHub'
     };
 
     /**
@@ -463,7 +463,7 @@ any apps you're building.
        * The dialog will be blocked by a popup blocker unless called inside click handler.
        */
       signIn: function () {
-        this.$.aware.signIn();
+        this.$.gitHubAware.signIn();
       },
 
       _signInKeyPress: function (e) {
@@ -476,7 +476,7 @@ any apps you're building.
       /** Sign out the user */
       signOut: function () {
         this.fire('openidconnect-signout-attempted');
-        this.$.aware.signOut();
+        this.$.gitHubAware.signOut();
       },
 
       _signOutKeyPress: function (e) {

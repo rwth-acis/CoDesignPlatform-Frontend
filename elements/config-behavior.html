@@ -10,12 +10,17 @@
     properties: {
       _apiBaseUrl: {
         type: String,
-        value: 'https://requirements-bazaar.org/bazaar'
+        value: 'http://localhost:8080/template'
       },
 
       _frontendBasePath: {
         type: String,
         value: '/'
+      },
+
+      _GitHubOrg: {
+        type: String,
+        value: 'Co-Design-Platform'
       },
 
       currentUser: {
@@ -28,7 +33,7 @@
         type: Object,
         value: function() { return GlobalConfig.currentGitHubUser; },
         observer: '_currentGitHubUserChanged'
-      }
+      },
       /**
        * Defines whether the user is logged in or not.
        */
@@ -48,8 +53,9 @@
 
     setCurrentGitHubUser: function(newValue){
       GlobalConfig.currentGitHubUser = newValue;
-    }
-    setCurrentUser: function(newValue) {
+    },
+
+    setCurrentUser: function(newValue){
       GlobalConfig.currentUser = newValue;
     },
 

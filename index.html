@@ -170,18 +170,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <template is="dom-if" if="{{isAuthorized}}">
             <span class="flex"></span>
             <div class="currentGitHubUser">
-              Welcome! [[currentGitHubUser.login]] Your GitHub email is [[currentGitHubUser.email]]
+              Welcome! [[currentGitHubUser.login]] Your GitHub email is [[currentGitHubUser.email]] currentAgent[[currentUserAgent]]
             </div>
           </template>
           <span class="flex"></span>
 
-          <!-- <openidconnect-signin id="openidconnectSignin" scopes="openid email profile"
-                                client-id="3a2d251c-a7d3-4c62-b63b-d10e1d1c2cb8"
+          <openidconnect-signin id="openidconnectSignin" scopes="openid email profile"
+                                client-id="73e44d81-9b15-4086-a0d7-b7edc399752e"
                                 server="https://api.learning-layers.eu/o/oauth2"
                                 is-authorized="{{_authorized}}"
                                 on-openidconnect-signin-aware-success="_handleSigninSuccessApp"
                                 on-openidconnect-signin-aware-signed-out="_handleSignedOut"></openidconnect-signin>
-                              -->
+
 
           <github-signin id="githubSignInBtn" is-authorized="{{isAuthorized}}" scopes="repo" client-id="b6d65034ff402a6e6f4d" server="https://github.com/login/oauth/authorize" base-href={{baseHref}}></github-signin>
         </paper-toolbar>
@@ -202,10 +202,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         id="getCurrentGitHubUser"
         url="{{baseHref}}/getCurrentGitHubUser"
         method="GET"
-        headers="{{accessGitHubHeader}}"
         on-request = "sentRequest"
         on-error = "errorHandler"
-        on-response="_handleCurrentUserResponse">
+        on-response="_handleCurrentGitHubUserResponse">
+      </iron-ajax>
+
+      <iron-ajax
+        id="getCurrentUserAgent"
+        url="{{baseHref}}/getcurrentagent"
+        method="GET"
+        on-request = "sentRequest"
+        on-error = "_handleCurrentUserAgentError"
+        on-response="_handleCurrentUserAgentResponse">
+      </iron-ajax>
+
+      <iron-ajax
+        id="creaetUserAgent"
+        url="{{baseHref}}/createagent"
+        method="GET"
+        on-request = "sentRequest"
+        on-error = "_handleCreateUserAgentError"
+        on-response="_handleCreateUserAgentResponse">
       </iron-ajax>
 
       <!-- Main Content -->
@@ -213,13 +230,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <div class="content" style="height:100%;">
         <iron-pages attr-for-selected="data-route" selected="{{route}}" style="height:100%;">
           <section data-route="home" href="{{baseUrl}}" style="height:100%;">
-            <projects-list name="projects" id="projectsList" base-href={{baseHref}} is-authorized={{isAuthorized}} org-name={{gitHubOrg}} access-token={{access_token}} ajax-params={{ajaxParamsGitHubOrg}} ajax-header={{header}}></projects-list>
-
-            <!-- <paper-fab raised onclick="dialog.open()" icon="add">open dialog test</paper-fab>
-            <paper-dialog id="dialog">
-              <h2>Dialog Title</h2>
-              <p>Dialog content</p>
-            </paper-dialog> -->
+            <projects-list name="projects" id="projectsList" access-token={{access_token}} ajax-header={{header}}></projects-list>
           </section>
 
 
@@ -300,7 +311,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <!-- SIGNLE COMPONENTS OF A PROJECT -->
         <section data-route="component-info" href="{{baseUrl}}component-info" style="height:100%;">
-          <component-detail id="componentDetail" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" access-token="{{access_token}}" current-git-hub-user={{currentGitHubUser}}></component-detail>
+          <component-detail id="componentDetail"
+          base-href="{{baseHref}}"
+          is-authorized="{{isAuthorized}}"
+          access-token="{{access_token}}"
+          current-git-hub-user={{currentGitHubUser}}
+          current-oidc-user={{currentOidcUser}}
+          oidc-auth-header={{oidcAuthHeader}}
+          oidc-access-token={{oidcAccessToken}}></component-detail>
         </section>
 
 

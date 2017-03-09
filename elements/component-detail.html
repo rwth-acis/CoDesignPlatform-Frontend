@@ -1,5 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="config-behavior.html">
 
 <dom-module id="component-detail">
   <template>
@@ -91,7 +92,7 @@
   <iron-ajax
   id="componentInfoLoader"
   handle-as="json"
-  url="{{baseHref}}/componentinfo"
+  url="[[_apiBaseUrl]]/componentinfo"
   content-type="application/json"
   method="GET"
   on-request="_sentRequest"
@@ -100,15 +101,15 @@
 
   <iron-ajax
   id="svgContentLoader"
-  url="{{baseHref}}\getsvgcontent"
-  handle-as="xml"
+  url="[[_apiBaseUrl]]/getsvgcontent"
+  handle-as="document"
   on-request="_sentRequest"
   on-response="_handleSvgContentResponse"></iron-ajax>
 
   <iron-ajax
   id="updateFileRequest"
   handle-as="json"
-  url="{{baseHref}}/updatefile"
+  url="[[_apiBaseUrl]]/updatefile"
   content-type="application/json"
   method="POST"
   on-request="_sentRequest"
@@ -116,10 +117,9 @@
   on-error="_handleUpdateError"></iron-ajax>
 
   <iron-ajax
-  id="createCommentRequest"
+  id="createCommentThreadRequest"
   handle-as="text"
   content-type="text/plain"
-  url="https://steen.informatik.rwth-aachen.de:9080/commentmanagement/threads"
   method="POST"
   on-request="_sentRequest"
   on-response="_receiveCreateCommentResponse"
@@ -128,7 +128,13 @@
 
   <paper-dialog id="commentsDialog" on-iron-overlay-closed="deleteLeftoverComment" entry-animation="fade-in-animation" exit-animation="fade-out-animation"
   style="min-width:40%; max-width:85%; top:100px; max-height: 80%; overflow:scroll;">
-  <h2 id="comment">Annotations</h2>
+  <!-- <h2 id="comment">Annotations</h2> -->
+  <!-- <las2peer-comment-thread-widget id="commentsWidget" login-name="[[currentGitHubUser.login]]" login-password="[[currentGitHubUser.login]]"></las2peer-comment-thread-widget> -->
+    <las2peer-comment-thread-widget id="commentsWidget"
+    login-oidc-provider='https://api.learning-layers.eu/o/oauth2'
+    login-oidc-token={{oidcAccessToken}}>
+    </las2peer-comment-thread-widget>
+
   </paper-dialog>
 
   <template is="dom-if" if="{{isAuthorized}}">
@@ -139,7 +145,6 @@
     <!-- <svg id="svgOut"></svg> -->
     <div id="svgOut"></div>
   </paper-material>
-  <!-- <las2peer-comment-thread-widget id="commentsWidget" login-name="[[currentGitHubUser.login]]" login-password="[[currentGitHubUser.email]]"></las2peer-comment-thread-widget> -->
 
 
 
@@ -163,6 +168,9 @@
 
   Polymer({
     is: 'component-detail',
+    behaviors: [
+      ConfigBehavior
+    ],
 
     properties: {
       accessToken:{
@@ -194,6 +202,15 @@
       },
       currentGitHubUser:{
         type: Object
+      },
+      currentOidcUser:{
+        type: String
+      },
+      oidcAuthHeader:{
+        type: String
+      },
+      oidcAccessToken:{
+        type: String
       },
       isAuthorized:{
         type: Boolean
@@ -274,6 +291,9 @@
         type: Boolean,
         value: false
       },
+      selectedElementId:{
+        type: String,
+      },
 
     },
 
@@ -282,10 +302,12 @@
 
       //this.setThread();
       //this.setUser();
+      //console.log("this.currentGitHubUser.login:" + this.currentGitHubUser.login);
+      //console.log("this.currentGitHubUser.email:" + this.currentGitHubUser.email);
 
 
       // load this component's info
-      var header = {Authorization: this.accessToken};
+      var header = {token: this.accessToken};
       var params =  {
         org: this.orgName,
         repo: this.projectName,
@@ -352,32 +374,6 @@
       // g.click(this.svgClick); // not working because of this scope, maybe need to use bind?
       g.click(function(e){
         that.getEventElement(e);
-        /*
-
-        var commentRequest = that.$.createCommentRequest;
-        console.log("that.currentGitHubUser.login:" + that.currentGitHubUser.login);
-        console.log("that.currentGitHubUser.email:" + that.currentGitHubUser.email);
-
-        var authUser = that.currentGitHubUser.login+":"+that.currentGitHubUser.email
-        //var header = {Authorization: "Basic " + btoa(authUser)};
-        var header = {Authorization: "Basic " + btoa("User A:userAPass")};
-
-
-        commentRequest.headers = header;
-        commentRequest.body = JSON.stringify({
-        "owner": that.currentGitHubUser.login,
-        "writer": "User B, User C",
-        "reader": "User D"
-      });
-      //commentRequest.setRequestHeader("Authorization", "Basic " + btoa("User A:userAPass"));
-      //xhttp.send('{owner:"User A", writer:"User B,User C", reader:"User D"}');
-      //commentRequest.generateRequest();
-
-
-      var commentsDialogNode = that.$.commentsDialog;
-      commentsDialogNode.querySelector("#comment").innerHTML = elementId+"'s Annotations: "+element.attr("a");
-      commentsDialogNode.open();
-      */
     });
 
   },
@@ -389,35 +385,64 @@
     var snapEl = Snap(e.target);
     console.log(snapEl);
 
-    var elementId = snapEl.node.id;
+    selectedElementId = snapEl.node.id;
+    console.log("selectedElementId:"+selectedElementId);
     firstSelectedEl = snapEl;
 
-    //snapEl.node.attr({a:"www.google.com"}); // doen't work
+    // snapEl.node.attr({a:"www.google.com"}); // doesn't work
     // snapEl.node is an DOM element
-    var s = Snap(snapEl);
-    s.attr({a:"www.google.com"});
-    console.log(s);
+    var s = Snap(snapEl.node);
+    //s.attr({a:"www.google.com"}); //set attribute
+    //var commentId = s.attr("commentId"); //get attribute doesn't work?
+    var commentId = s.attr("commentid");
 
-    var commentsDialogNode = this.$.commentsDialog;
-    commentsDialogNode.querySelector("#comment").innerHTML = elementId+", "+ s.attr("a") ;
-    commentsDialogNode.open();
+    console.log("commentId:"+commentId);
 
-    var newSvgContent = this.$.svgOut.firstElementChild;
-    console.log(newSvgContent);
+    // var commentsDialogNode = this.$.commentsDialog;
+    // commentsDialogNode.querySelector("#comment").innerHTML = elementId+", "+ s.attr("a") ;
+    // commentsDialogNode.open();
 
-
+    // make red hightlight dot-line
     this.highlightEl(snapEl);
 
-    this.testAddSvgAttr(newSvgContent,elementId);
-    //this.createElementComment();
+    // if has commentId attribute , show existed comment (need comment id)
+    if(commentId!=null || commentId!=undefined){
+      var comments = this.$.commentsWidget;
+      comments.setAttribute("thread", commentId);
+      var commentsDialogNode = this.$.commentsDialog;
+      commentsDialogNode.open();
+    }
+    else{
+    // else createComment & add commentId in file & update file
+      this.createCommentThread();
+    }
 
+
+
+  },
+
+
+  addCommentIdToFile: function(id){
+    // add comment id to file & update file
+    console.log("commentId:"+id);
+    var domElement = this.$.svgOut.querySelector("svg");
+    var selectedElement = domElement.querySelector("#"+selectedElementId);
+    console.log("selectedElementId:"+selectedElementId);
+    console.log("selectedElement:"+selectedElement);
+
+    var s = Snap(selectedElement);
+    s.attr({commentId:id}); //set attribute
+    console.log(s);
+    var newSvgContent = this.$.svgOut.firstElementChild;
+    console.log(newSvgContent);
+    this.testAddSvgAttr(newSvgContent,selectedElementId);
   },
 
   testAddSvgAttr: function(newContent,elementId){
     var newContentString = new XMLSerializer().serializeToString(newContent); // from xml to string
     var fileContent = btoa(newContentString); // from string to base64
     var fileName = this.componentModel.name;
-    this._sendFile(fileName,"add comment to element:"+elementId,fileContent);
+    this._sendFile(fileName,"add comment to element: "+elementId,fileContent);
   },
 
   highlightEl: function(el){
@@ -427,7 +452,7 @@
     var s = Snap(domElement);
 
     this.highlightRect = s.rect( this.rectObjFromBB( el.getBBox(1) ) )
-    .attr({ id:"annotation", fill: "none", stroke: "red", strokeDasharray: "5,5" });
+    .attr({ id:"annotation_"+selectedElementId, fill: "none", stroke: "red", strokeDasharray: "5,5" });
     this.highlightRect.transform( el.transform().global.toString() );
     this.lastSelectedEl = el;
   },
@@ -436,21 +461,27 @@
     return { x: bb.x, y: bb.y, width: bb.width, height: bb.height }
   },
 
-  createElementComment: function(){
-    var commentRequest = this.$.createCommentRequest;
-    console.log("that.currentGitHubUser.login:" + this.currentGitHubUser.login);
-    console.log("that.currentGitHubUser.email:" + this.currentGitHubUser.email);
+  createCommentThread: function(){
+    var commentRequest = this.$.createCommentThreadRequest;
+    //commentRequest.url="https://las2peer.dbis.rwth-aachen.de:9098/commentmanagement/threads"
+    commentRequest.url="http://localhost:8080/commentmanagement/threads"
 
-    var authUser = this.currentGitHubUser.login + ":" + this.currentGitHubUser.email;
-    //var header = {Authorization: "Basic " + btoa(authUser)};
+    // var authUser = this.currentGitHubUser.login + ":" + this.currentGitHubUser.login;
+    // console.log("authUser: " + authUser);
+    // var header = {Authorization: "Basic " + btoa(authUser)};
+
+    var header = this.oidcAuthHeader;
+    //console.log("btoa(authUser):" + btoa(authUser));
+    //console.log("btoa(User A:userAPass)" + btoa("User A:userAPass") );
     //xhttp.setRequestHeader("Authorization", "Basic " + btoa("User A:userAPass"));
     //xhttp.send('{owner:"User A", writer:"User B,User C", reader:"User D"}');
-    var header = {Authorization: "Basic " + btoa("User A:userAPass")};
+    //var header = {Authorization: "Basic " + btoa("User A:userAPass")};
+
     commentRequest.headers = header;
     commentRequest.body = JSON.stringify({
-      "owner": "User A",
-      "writer": "User B,User C",
-      "reader": "User D"
+      "owner": this.currentOidcUser,
+      "writer": this.currentOidcUser,
+      "reader": this.currentOidcUser
     });
 
     //commentRequest.setRequestHeader("Authorization", "Basic " + btoa("User A:userAPass"));
@@ -459,20 +490,25 @@
   },
 
   _receiveCreateCommentResponse: function(event){
-    console.log(event.target.lastResponse);
-    localStorage.setItem("thread", event.target.lastResponse);
+    var statusCode = event.detail.status;
+    console.log("_receiveCreateCommentResponse event.detail:" + event.detail);
+    console.log("_receiveCreateCommentResponse:" + event.target.lastResponse);
+    console.log("_receiveCreateCommentResponse statusCode:" + statusCode);
 
-    var commentsDialogNode = this.$.commentsDialog;
+    if(statusCode == '201'){
+      localStorage.setItem("thread", event.target.lastResponse);
+      this.setThread();
+      this.addCommentIdToFile(event.target.lastResponse);
+      var commentsDialogNode = this.$.commentsDialog;
+      commentsDialogNode.open();
 
-    var elementIdtemp = commentsDialogNode.querySelector("#comment").innerHTML;
-    console.log(elementIdtemp);
-    var responseThreadID = "'s Annotations:"+ event.target.lastResponse;
-    var res = elementIdtemp.concat(responseThreadID);
-    console.log(res);
-    //commentsDialogNode.querySelector("#comment").innerHTML = responseThreadID;
-    //commentsDialogNode.open();
-    this.setThread();
+    }
+    else{
+      this.$.toast.text = ("Create Comment Thread Fail!");
+      this.$.toast.open();
+    }
   },
+
 
   setThread: function(){
     var comments = this.$.commentsWidget;
@@ -485,6 +521,7 @@
     // }
   },
 
+  //  應該不用set, 因為已經在polymer componet 傳遞參數
   setUser: function(){
     //var currentUser = userSelector.options[userSelector.selectedIndex].value
     var widget = this.$.commentsWidget;
@@ -574,7 +611,7 @@ updateFile(event) {
 // send file via backend service to GitHub
 _sendFile: function(fileName,message,fileContent) {
   var updateRequest = this.$.updateFileRequest;
-  var header = {Authorization: this.accessToken};
+  var header = {token: this.accessToken};
   var parameters = {
     org: this.orgName,
     repo: this.projectName,
@@ -592,8 +629,6 @@ _sendFile: function(fileName,message,fileContent) {
     "content": fileContent
   });
   console.log("update body:"+updateRequest.body);
-  console.log("update branch:"+updateRequest.body.branch);
-  console.log("update sha:"+updateRequest.body.sha);
   updateRequest.generateRequest();
 },
 

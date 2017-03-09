@@ -5,23 +5,23 @@
 
 
 /**
- * OIDC namespace
- * @namespace OIDC
+ * GitHubOIDC namespace
+ * @namespace GitHubOIDC
  */
-var OIDC = namespace('OIDC');
+var GitHubOIDC = namespace('GitHubOIDC');
 
 /**
- * @property {array} OIDC.supportedProviderOptions                                 - List of the Identity Provider's configuration parameters
- * @property {string} OIDC.supportedProviderOptions.issuer                         - Issuer ID
- * @property {string} OIDC.supportedProviderOptions.authorization_endpoint         - Authorization Endpoint URL
- * @property {string} OIDC.supportedProviderOptions.jwks_uri                       - JWKS URL
- * @property {boolean} OIDC.supportedProviderOptions.claims_parameter_supported    - Claims parameter support
- * @property {boolean} OIDC.supportedProviderOptions.request_parameter_supported   - Request parameter support
- * @property {object} OIDC.supportedProviderOptions.jwks                           - Identity Provider's JWK Set
+ * @property {array} GitHubOIDC.supportedProviderOptions                                 - List of the Identity Provider's configuration parameters
+ * @property {string} GitHubOIDC.supportedProviderOptions.issuer                         - Issuer ID
+ * @property {string} GitHubOIDC.supportedProviderOptions.authorization_endpoint         - Authorization Endpoint URL
+ * @property {string} GitHubOIDC.supportedProviderOptions.jwks_uri                       - JWKS URL
+ * @property {boolean} GitHubOIDC.supportedProviderOptions.claims_parameter_supported    - Claims parameter support
+ * @property {boolean} GitHubOIDC.supportedProviderOptions.request_parameter_supported   - Request parameter support
+ * @property {object} GitHubOIDC.supportedProviderOptions.jwks                           - Identity Provider's JWK Set
  * @readonly
- * @memberof OIDC
+ * @memberof GitHubOIDC
  */
-OIDC.supportedProviderOptions = [
+GitHubOIDC.supportedProviderOptions = [
     'issuer',
     'authorization_endpoint'
 //    'jwks_uri',
@@ -65,20 +65,20 @@ OIDC.supportedProviderOptions = [
 ];
 
 /**
- * @property {array} OIDC.supportedRequestOptions             - Supported Login Request parameters
- * @property {string} OIDC.supportedRequestOptions.scope      - space separated scope values
- * @property {string} OIDC.supportedRequestOptions.response_type  - space separated response_type values
- * @property {string} OIDC.supportedRequestOptions.display    - display
- * @property {string} OIDC.supportedRequestOptions.max_age    - max_age
- * @property {object} OIDC.supportedRequestOptions.claims    - claims object containing what information to return in the UserInfo endpoint and ID Token
- * @property {array} OIDC.supportedRequestOptions.claims.id_token    - list of claims to return in the ID Token
- * @property {array} OIDC.supportedRequestOptions.claims.userinfo    - list of claims to return in the UserInfo endpoint
- * @property {boolean} OIDC.supportedRequestOptions.request   - signed request object JWS. Not supported yet.
+ * @property {array} GitHubOIDC.supportedRequestOptions             - Supported Login Request parameters
+ * @property {string} GitHubOIDC.supportedRequestOptions.scope      - space separated scope values
+ * @property {string} GitHubOIDC.supportedRequestOptions.response_type  - space separated response_type values
+ * @property {string} GitHubOIDC.supportedRequestOptions.display    - display
+ * @property {string} GitHubOIDC.supportedRequestOptions.max_age    - max_age
+ * @property {object} GitHubOIDC.supportedRequestOptions.claims    - claims object containing what information to return in the UserInfo endpoint and ID Token
+ * @property {array} GitHubOIDC.supportedRequestOptions.claims.id_token    - list of claims to return in the ID Token
+ * @property {array} GitHubOIDC.supportedRequestOptions.claims.userinfo    - list of claims to return in the UserInfo endpoint
+ * @property {boolean} GitHubOIDC.supportedRequestOptions.request   - signed request object JWS. Not supported yet.
  * @readonly
- * @memberof OIDC
+ * @memberof GitHubOIDC
  *
  */
-OIDC.supportedRequestOptions = [
+GitHubOIDC.supportedRequestOptions = [
     'scope',
     'response_type',
     'display',
@@ -88,14 +88,14 @@ OIDC.supportedRequestOptions = [
 ];
 
 /**
- * @property {array} OIDC.supportedClientOptions                 - List of supported Client configuration parameters
- * @property {string} OIDC.supportedClientOptions.client_id      - The client's client_id
- * @property {string} OIDC.supportedClientOptions.redirect_uri   - The client's redirect_uri
+ * @property {array} GitHubOIDC.supportedClientOptions                 - List of supported Client configuration parameters
+ * @property {string} GitHubOIDC.supportedClientOptions.client_id      - The client's client_id
+ * @property {string} GitHubOIDC.supportedClientOptions.redirect_uri   - The client's redirect_uri
  * @readonly
- * @memberof OIDC
+ * @memberof GitHubOIDC
  *
  */
-OIDC.supportedClientOptions = [
+GitHubOIDC.supportedClientOptions = [
     'client_id',
     'redirect_uri',
     'client_secret',
@@ -105,12 +105,12 @@ OIDC.supportedClientOptions = [
 /**
  * Sets the Identity Provider's configuration parameters
  * @function setProviderInfo
- * @memberof OIDC
- * @param {object} p      - The Identity Provider's configuration options described in {@link OIDC.supportedProviderOptions}
+ * @memberof GitHubOIDC
+ * @param {object} p      - The Identity Provider's configuration options described in {@link GitHubOIDC.supportedProviderOptions}
  * @returns {boolean}     - Indicates status of
  * @example
  * // set Identity Provider configuration
- * OIDC.setProviderInfo( {
+ * GitHubOIDC.setProviderInfo( {
  *                          issuer: 'https:/op.example.com',
  *                          authorization_endpoint: 'http://op.example.com/auth.html',
  *                          jwks_uri: 'https://op.example.com/jwks'
@@ -118,11 +118,11 @@ OIDC.supportedClientOptions = [
  *                     );
  *
  * // set Identity Provider configuration using discovery information
- * var discovery = OIDC.discover('https://op.example.com');
+ * var discovery = GitHubOIDC.discover('https://op.example.com');
  * if(var)
- *     OIDC.setProviderInfo(discovery);
+ *     GitHubOIDC.setProviderInfo(discovery);
  */
-OIDC.setProviderInfo = function (p) {
+GitHubOIDC.setProviderInfo = function (p) {
     var params = this.supportedProviderOptions;
 
     if (typeof p !== 'undefined') {
@@ -140,18 +140,18 @@ OIDC.setProviderInfo = function (p) {
 /**
  * Sets the Client's configuration parameters
  * @function setClientInfo
- * @memberof OIDC
- * @param {object} p      - The Client's configuration options described in {@link OIDC.supportedClientOptions}
+ * @memberof GitHubOIDC
+ * @param {object} p      - The Client's configuration options described in {@link GitHubOIDC.supportedClientOptions}
  * @returns {boolean}       Indicates status of call
  * @example
  * // set client_id and redirect_uri
- * OIDC.setClientInfo( {
+ * GitHubOIDC.setClientInfo( {
  *                          client_id: 'myclientID',
  *                          redirect_uri: 'https://rp.example.com/callback.html'
  *                     }
  *                   );
  */
-OIDC.setClientInfo = function(p)
+GitHubOIDC.setClientInfo = function(p)
 {
     var params = this.supportedClientOptions;
 
@@ -169,11 +169,11 @@ OIDC.setClientInfo = function(p)
 /**
  * Stores the Identity Provider and Client configuration options in the browser session storage for reuse later
  * @function storeInfo
- * @memberof OIDC
- * @param {object} providerInfo    - The Identity Provider's configuration options described in {@link OIDC.supportedProviderOptions}
- * @param {object} clientInfo      - The Client's configuration options described in {@link OIDC.supportedClientOptions}
+ * @memberof GitHubOIDC
+ * @param {object} providerInfo    - The Identity Provider's configuration options described in {@link GitHubOIDC.supportedProviderOptions}
+ * @param {object} clientInfo      - The Client's configuration options described in {@link GitHubOIDC.supportedClientOptions}
  */
-OIDC.storeInfo = function (providerInfo,clientInfo)
+GitHubOIDC.storeInfo = function (providerInfo,clientInfo)
 {
     var pOptions = this.supportedProviderOptions;
     var cOptions = this.supportedClientOptions;
@@ -207,9 +207,9 @@ OIDC.storeInfo = function (providerInfo,clientInfo)
 /**
  * Load and restore the Identity Provider and Client configuration options from the browser session storage
  * @function restoreInfo
- * @memberof OIDC
+ * @memberof GitHubOIDC
  */
-OIDC.restoreInfo = function()
+GitHubOIDC.restoreInfo = function()
 {
     var providerInfo = sessionStorage['providerInfo'];
     var clientInfo = sessionStorage['clientInfo'];
@@ -225,17 +225,17 @@ OIDC.restoreInfo = function()
  * Check whether the required configuration parameters are set
  * @function checkRequiredInfo
  * @param {array} params    - List of Identity Provider and client configuration parameters
- * @memberof OIDC
+ * @memberof GitHubOIDC
  * @private
  * @return {boolean}        - Indicates whether the options have been set
  *
  */
-OIDC.checkRequiredInfo = function(params)
+GitHubOIDC.checkRequiredInfo = function(params)
 {
     if(params) {
         for(var i = 0; i < params.length; i++) {
             if(!this[params[i]]) {
-                throw new OidcException('Required parameter not set - ' + params[i]);
+                throw new GitHubOIDCException('Required parameter not set - ' + params[i]);
             }
         }
     }
@@ -245,10 +245,10 @@ OIDC.checkRequiredInfo = function(params)
 /**
  * Clears the Identity Provider configuration parameters
  * @function clearProviderInfo
- * @memberof OIDC
+ * @memberof GitHubOIDC
  * @private
  */
-OIDC.clearProviderInfo = function()
+GitHubOIDC.clearProviderInfo = function()
 {
     for(var i = 0; i < this.supportedProviderOptions.length; i++) {
         this[this.supportedProviderOptions[i]] = null;
@@ -258,12 +258,12 @@ OIDC.clearProviderInfo = function()
 
 /**
  * Redirect to the Identity Provider for authenticaton
- * @param {object} reqOptions    - Optional authentication request options. See {@link OIDC.supportedRequestOptions}
- * @throws {OidcException}
+ * @param {object} reqOptions    - Optional authentication request options. See {@link GitHubOIDC.supportedRequestOptions}
+ * @throws {GitHubOIDCException}
  * @example
  *
  * // login with options
- * OIDC.login( {
+ * GitHubOIDC.login( {
  *               scope : 'openid profile',
  *               response_type : 'token id_token',
  *               max_age : 60,
@@ -275,9 +275,9 @@ OIDC.clearProviderInfo = function()
  *            );
  *
  * // login with default scope=openid, response_type=id_token
- * OIDC.login();
+ * GitHubOIDC.login();
  */
-OIDC.login = function(reqOptions) {
+GitHubOIDC.login = function(reqOptions) {
     // verify required parameters
     this.checkRequiredInfo(new Array('client_id', 'redirect_uri', 'authorization_endpoint'));
 
@@ -371,7 +371,7 @@ OIDC.login = function(reqOptions) {
                 }
 
             } else
-                throw new OidcException('Provider does not support claims request parameter')
+                throw new GitHubOIDCException('Provider does not support claims request parameter')
 
         }
     }
@@ -411,35 +411,35 @@ OIDC.login = function(reqOptions) {
 
 /**
  * Verifies the ID Token signature using the JWK Keyset from jwks or jwks_uri of the
- * Identity Provider Configuration options set via {@link OIDC.setProviderInfo}.
+ * Identity Provider Configuration options set via {@link GitHubOIDC.setProviderInfo}.
  * Supports only RSA signatures
  * @param {string }idtoken      - The ID Token string
  * @returns {boolean}           Indicates whether the signature is valid or not
- * @see OIDC.setProviderInfo
- * @throws {OidcException}
+ * @see GitHubOIDC.setProviderInfo
+ * @throws {GitHubOIDCException}
  */
-OIDC.verifyIdTokenSig = function (idtoken)
+GitHubOIDC.verifyIdTokenSig = function (idtoken)
 {
     var verified = false;
     var requiredParam = this['jwks_uri'] || this['jwks'];
     if(!requiredParam) {
-        throw new OidcException('jwks_uri or jwks parameter not set');
+        throw new GitHubOIDCException('jwks_uri or jwks parameter not set');
     } else  if(idtoken) {
         var idtParts = this.getIdTokenParts(idtoken);
         var header = this.getJsonObject(idtParts[0])
         var jwks = this['jwks'] || this.fetchJSON(this['jwks_uri']);
         if(!jwks)
-            throw new OidcException('No JWK keyset');
+            throw new GitHubOIDCException('No JWK keyset');
         else {
             if(header['alg'] && header['alg'].substr(0, 2) == 'RS') {
                 var jwk = this.jwk_get_key(jwks, 'RSA', 'sig', header['kid']);
                 if(!jwk)
-                    new OidcException('No matching JWK found');
+                    new GitHubOIDCException('No matching JWK found');
                 else {
                     verified = this.rsaVerifyJWS(idtoken, jwk[0]);
                 }
             } else
-                throw new OidcException('Unsupported JWS signature algorithm ' + header['alg']);
+                throw new GitHubOIDCException('Unsupported JWS signature algorithm ' + header['alg']);
         }
     }
     return verified;
@@ -448,12 +448,12 @@ OIDC.verifyIdTokenSig = function (idtoken)
 
 /**
  * Validates the information in the ID Token against configuration data in the Identity Provider
- * and Client configuration set via {@link OIDC.setProviderInfo} and set via {@link OIDC.setClientInfo}
+ * and Client configuration set via {@link GitHubOIDC.setProviderInfo} and set via {@link GitHubOIDC.setClientInfo}
  * @param {string} idtoken      - The ID Token string
  * @returns {boolean}           Validity of the ID Token
- * @throws {OidcException}
+ * @throws {GitHubOIDCException}
  */
-OIDC.isValidIdToken = function(idtoken) {
+GitHubOIDC.isValidIdToken = function(idtoken) {
 
     var idt = null;
     var valid = false;
@@ -465,19 +465,19 @@ OIDC.isValidIdToken = function(idtoken) {
         if(payload) {
             var now =  new Date() / 1000;
             if( payload['iat'] >  now + (5 * 60))
-                throw new OidcException('ID Token issued time is later than current time');
+                throw new GitHubOIDCException('ID Token issued time is later than current time');
             if(payload['exp'] < now - (5*60))
-                throw new OidcException('ID Token expired');
+                throw new GitHubOIDCException('ID Token expired');
 
             if(payload['aud'][0]!= this['client_id'])
-                throw new OidcException('invalid audience');
+                throw new GitHubOIDCException('invalid audience');
             if(payload['iss'] != this['issuer'])
-                throw new OidcException('invalid issuer ' + payload['iss'] + ' != ' + this['issuer']);
+                throw new GitHubOIDCException('invalid issuer ' + payload['iss'] + ' != ' + this['issuer']);
             if(payload['nonce'] != sessionStorage['nonce'])
-                throw new OidcException('invalid nonce');
+                throw new GitHubOIDCException('invalid nonce');
             valid = true;
         } else
-            throw new OidcException('Unable to parse JWS payload');
+            throw new GitHubOIDCException('Unable to parse JWS payload');
     }
     return valid;
 }
@@ -487,9 +487,9 @@ OIDC.isValidIdToken = function(idtoken) {
  * @param {string} jws      - The JWS string
  * @param {object} jwk      - The JWK Key that will be used to verify the signature
  * @returns {boolean}       Validity of the JWS signature
- * @throws {OidcException}
+ * @throws {GitHubOIDCException}
  */
-OIDC.rsaVerifyJWS = function (jws, jwk)
+GitHubOIDC.rsaVerifyJWS = function (jws, jwk)
 {
     if(jws && typeof jwk === 'object') {
         if(jwk['kty'] == 'RSA') {
@@ -502,7 +502,7 @@ OIDC.rsaVerifyJWS = function (jws, jwk)
                 return verifier.verifyJWSByPemX509Cert(jws, "-----BEGIN CERTIFICATE-----\n" + jwk['x5c'][0] + "\n-----END CERTIFICATE-----\n");
             }
         } else {
-            throw new OidcException('No RSA kty in JWK');
+            throw new GitHubOIDCException('No RSA kty in JWK');
         }
     }
     return false;
@@ -510,11 +510,11 @@ OIDC.rsaVerifyJWS = function (jws, jwk)
 
 /**
  * Get the ID Token from the current page URL whose signature is verified and contents validated
- * against the configuration data set via {@link OIDC.setProviderInfo} and {@link OIDC.setClientInfo}
+ * against the configuration data set via {@link GitHubOIDC.setProviderInfo} and {@link GitHubOIDC.setClientInfo}
  * @returns {string|null}
- * @throws {OidcException}
+ * @throws {GitHubOIDCException}
  */
-OIDC.getValidIdToken = function()
+GitHubOIDC.getValidIdToken = function()
 {
     var url = window.location.href;
 
@@ -523,7 +523,7 @@ OIDC.getValidIdToken = function()
     if (error) {
         // If so, extract the error description and display it
         var description = url.match('error_description=([^&]*)');
-        throw new OidcException(error[1] + ' Description: ' + description[1]);
+        throw new GitHubOIDCException(error[1] + ' Description: ' + description[1]);
     }
     // Exract state from the state parameter
     var smatch = url.match('state=([^&]*)');
@@ -536,7 +536,7 @@ OIDC.getValidIdToken = function()
     // Extract id token from the id_token parameter
     var match = url.match('id_token=([^&]*)');
     if (badstate) {
-        throw new OidcException("State mismatch");
+        throw new GitHubOIDCException("State mismatch");
     } else if (match) {
         var id_token = match[1]; // String captured by ([^&]*)
 
@@ -546,10 +546,10 @@ OIDC.getValidIdToken = function()
             if(sigVerified && valid)
                 return id_token;
         } else {
-            throw new OidcException('Could not retrieve ID Token from the URL');
+            throw new GitHubOIDCException('Could not retrieve ID Token from the URL');
         }
     } else {
-        throw new OidcException('No ID Token returned');
+        throw new GitHubOIDCException('No ID Token returned');
     }
     return null;
 };
@@ -560,7 +560,7 @@ OIDC.getValidIdToken = function()
  *
  * @returns {string|null}  Access Token
  */
-/* OIDC.getAccessToken = function(code)
+/* GitHubOIDC.getAccessToken = function(code)
  {
    //var url = window.location.href;
    var url =   this['authorization_endpoint']
@@ -606,10 +606,10 @@ OIDC.getValidIdToken = function()
  *
  * @returns {string|null}  Authorization Code
  */
-OIDC.getCode = function(url)
+GitHubOIDC.getCode = function(url)
 {
     //var url = window.location.href;
-    console.log("OIDC.getCode URL:"+url);
+    console.log("GitHubOIDC.getCode URL:"+url);
 
     // Check for code
     var code = url.match('code=([^(&)]*)');
@@ -624,7 +624,7 @@ OIDC.getCode = function(url)
  * @param  {string} id_token    - ID Token
  * @returns {Array} An array of the JWS compact serialization components (header, payload, signature)
  */
-OIDC.getIdTokenParts = function (id_token) {
+GitHubOIDC.getIdTokenParts = function (id_token) {
     var jws = new KJUR.jws.JWS();
     jws.parseJWS(id_token);
     return new Array(jws.parsedJWS.headS, jws.parsedJWS.payloadS, jws.parsedJWS.si);
@@ -635,7 +635,7 @@ OIDC.getIdTokenParts = function (id_token) {
  * @param {string} id_token     - ID Token
  * @returns {object}            - The ID Token payload JSON object
  */
-OIDC.getIdTokenPayload = function (id_token) {
+GitHubOIDC.getIdTokenPayload = function (id_token) {
     var parts = this.getIdTokenParts(id_token);
     if(parts)
         return this.getJsonObject(parts[1]);
@@ -646,7 +646,7 @@ OIDC.getIdTokenPayload = function (id_token) {
  * @param {string} jsonS    - JSON string
  * @returns {object|null}   JSON object or null
  */
-OIDC.getJsonObject = function (jsonS) {
+GitHubOIDC.getJsonObject = function (jsonS) {
     var jws = new KJUR.jws.JWS();
     //jsonS = "{\"issuer\": \"https://github.com/login/oauth/authorize\"}";
     if(jws.isSafeJSONString(jsonS)) {
@@ -662,9 +662,9 @@ OIDC.getJsonObject = function (jsonS) {
  * Retrieves the JSON file at the specified URL. The URL must have CORS enabled for this function to work.
  * @param {string} url      - URL to fetch the JSON file
  * @returns {string|null}    contents of the URL or null
- * @throws {OidcException}
+ * @throws {GitHubOIDCException}
  */
-OIDC.fetchJSON = function(url) {
+GitHubOIDC.fetchJSON = function(url) {
     try {
         var request = new XMLHttpRequest();
         request.open('GET', url, false);
@@ -673,11 +673,11 @@ OIDC.fetchJSON = function(url) {
         if (request.status === 200) {
             return request.responseText;
         } else
-            throw new OidcException("fetchJSON - " + request.status + ' ' + request.statusText);
+            throw new GitHubOIDCException("fetchJSON - " + request.status + ' ' + request.statusText);
 
     }
     catch(e) {
-        throw new OidcException('Unable to retrieve JSON file at ' + url + ' : ' + e.toString());
+        throw new GitHubOIDCException('Unable to retrieve JSON file at ' + url + ' : ' + e.toString());
     }
     return null;
 };
@@ -690,7 +690,7 @@ OIDC.fetchJSON = function(url) {
  * @param {string}kid               - The 'kid' to match
  * @returns {array}                 Array of JWK keys that match the specified criteria                                                                     itera
  */
-OIDC.jwk_get_key = function(jwkIn, kty, use, kid )
+GitHubOIDC.jwk_get_key = function(jwkIn, kty, use, kid )
 {
     var jwk = null;
     var foundKeys = [];
@@ -747,14 +747,14 @@ OIDC.jwk_get_key = function(jwkIn, kty, use, kid )
 };
 
 /**
- * Performs discovery on the IdP issuer_id (OIDC.discover)
+ * Performs discovery on the IdP issuer_id (GitHubOIDC.discover)
  * @function discover
- * @memberof OIDC
+ * @memberof GitHubOIDC
  * @param {string} issuer     - The Identity Provider's issuer_id
  * @returns {object|null}     - The JSON object of the discovery document or null
- * @throws {OidcException}
+ * @throws {GitHubOIDCException}
  */
-OIDC.discover = function(issuer)
+GitHubOIDC.discover = function(issuer)
 {
     // issuer : https://github.com/login/oauth/authorize
     var discovery = null;
@@ -774,16 +774,16 @@ OIDC.discover = function(issuer)
 
 
 /**
- * OidcException
+ * GitHubOIDCException
  * @param {string } message  - The exception error message
  * @constructor
  */
-function OidcException(message) {
-    this.name = 'OidcException';
+function GitHubOIDCException(message) {
+    this.name = 'GitHubOIDCException';
     this.message = message;
 }
-OidcException.prototype = new Error();
-OidcException.prototype.constructor = OidcException;
+GitHubOIDCException.prototype = new Error();
+GitHubOIDCException.prototype.constructor = GitHubOIDCException;
 
 
 

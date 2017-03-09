@@ -19,7 +19,7 @@
     </iron-ajax>
 </template>
 
-<script src="scripts/openidconnect.js"></script>
+<script src="scripts/github-signin.js"></script>
 
 <script>
   (function() {
@@ -303,18 +303,18 @@
                 //redirect_uri: window.location
                 redirect_uri: 'http://localhost:3000/signin-result',
             };
-            OIDC.setClientInfo(clientInfo);
-            var providerInfo = OIDC.discover(this.server);
+            GitHubOIDC.setClientInfo(clientInfo);
+            var providerInfo = GitHubOIDC.discover(this.server);
 
             // set Identity Provider configuration
-            OIDC.setProviderInfo(providerInfo);
+            GitHubOIDC.setProviderInfo(providerInfo);
             // store configuration for reuse in the callback page
-            OIDC.storeInfo(providerInfo, clientInfo);
-            //OIDC.storeInfo(clientInfo);
+            GitHubOIDC.storeInfo(providerInfo, clientInfo);
+            //GitHubOIDC.storeInfo(clientInfo);
 
             var popupWidth = Math.min(650, window.screen.width-20);
             var popupHeight = Math.min(600, window.screen.height-30);
-            var url = OIDC.login({scope : 'repo',
+            var url = GitHubOIDC.login({scope : 'repo',
                         response_type : 'code'
                     }
             );
@@ -546,10 +546,10 @@ Example with offline:
           // window here means the popup window with redirect_uri and parameters
           if ((window.location.href.indexOf("code") > 0) && this.haveAskedToken!=true) {
               // Restore configuration information
-              OIDC.restoreInfo();
+              GitHubOIDC.restoreInfo();
 
               console.log("Attached:window.location.href:"+window.location.href);
-              message = OIDC.getCode(window.location.href);
+              message = GitHubOIDC.getCode(window.location.href);
               console.log("message:"+message);
               //send code back to the origin window, which is popup.opener, then ask for access_token
               window.opener.postMessage(message, window.location);

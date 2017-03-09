@@ -65,13 +65,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.currentUser = null;
   app.compResponse = null;
   app.isMobile = false; //initiate as false
-  app.i18n = null;
   app.loading = false;
   app.selectedFilter = "active";
   app.list = true;
-  app.header = {Authorization: app.access_token}; // for access service
+  app.header = null; // for access backend service
   app.accessGitHubHeader = null; // for access GitHub directly
   app.currentGitHubUser = null;
+  app.accessOpenIdHeader = null; // for access learning layer open id
+  app.oidcAccessToken = null;
+  app.currentOidcUser = null;
   app.gitHubOrg = "Co-Design-Platform";
   app.ajaxParamsGitHubOrg = {org: app.gitHubOrg};
   app.showFileUploadForm = false;
@@ -151,25 +153,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 
 
-/*
-  _handleSigninSuccessApp: function(e) {
+  app._handleSigninSuccessApp = function(e) {
     this._handleSigninSuccess(e);
-    this.$.currentUserRequest.generateRequest();
+    //this.$.currentUserRequest.generateRequest();
 
     // deactivate menu entry selection, just in case the login was made from the main menu
-    this.$.mainMenu.selected = null;
-  },
+    //this.$.mainMenu.selected = null;
+  };
 
-  _handleSigninSuccess: function(e) {
+  app._handleSigninSuccess = function(e) {
     this.authorized = true;
-    this.authHeader = {authorization: "Bearer " + e.detail.access_token};
-  },
+    this.oidcAuthHeader = {authorization: "Bearer " + e.detail.access_token};
+    this.oidcAccessToken = e.detail.access_token;
+    console.log("oidc header: "+this.oidcAuthHeader);
+    var getAgentRequest = document.querySelector('#getCurrentUserAgent');
+    getAgentRequest.headers = this.oidcAuthHeader;
+    getAgentRequest.generateRequest();
+  };
 
-  _handleSignedOut: function(e) {
+  _handleSignedOut = function(e) {
     this.authorized = false;
-    this.authHeader = null;
-  },
-  */
+    this.oidcAuthHeader = null;
+  };
+
 
 
   document.addEventListener('github-signin-aware-success', function(e){
@@ -179,7 +185,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         app.access_token = this.access_token;
 
         // set header send to backend service
-        app.header = {Authorization: this.access_token};
+        app.header = {token: this.access_token};
 
         // set header for directly access GitHub api through frontend
         app.accessGitHubHeader = {Authorization: 'token '+this.access_token};
@@ -188,7 +194,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var request = document.querySelector('#getCurrentGitHubUser');
         request.headers = app.header;
         request.generateRequest();
-
         // redirect to projects page
         if (app.route === "home"){
           page("/projects");
@@ -196,11 +201,71 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         window.setTimeout(sayHi,500);
       });
 
-  app._handleCurrentUserResponse = function(data){
-      var user = data.detail.response;
+  app._handleCurrentGitHubUserResponse = function(event){
+      var user = event.detail.response;
       this.currentGitHubUser = user;
+
+
+      // get user agent info
+      var getAgentRequest = document.querySelector('#getCurrentUserAgent');
+      //Authorization: Basic BASE64([id or login name]:[passphrase])
+      var authUser = this.currentGitHubUser.login + ":"+ this.currentGitHubUser.login
+      // var getAgentRequestheader = {Authorization: "Basic " + btoa(authUser)};
+      // getAgentRequest.headers = getAgentRequestheader
+      // getAgentRequest.generateRequest();
+
   };
 
+  app._handleCurrentUserAgentResponse = function(event){
+    console.log("_handleCurrentUserAgentResponse:" + event.detail.response);
+    this.currentOidcUser = event.detail.response;
+    //user agent name:yuwenhuang, id:-2674945099117441909
+  };
+
+  app._handleCurrentUserAgentError = function(event,detail){
+
+    // how to get error status code see https://github.com/PolymerElements/iron-ajax/issues/65
+    console.log(detail.error); //the error object
+    console.log(detail.request.status); //the status code
+    console.log(detail.request.statusText);  //the error status text
+
+
+    // if the agent does not exist, then create it
+    // backend service will create this agent
+    // its passphrase = this.currentGitHubUser.login
+    // its LoginName = this.currentGitHubUser.login
+    // its Email = this.currentGitHubUser.email
+    if(detail.request.status == 401)
+    {
+      console.log("create new agent"); //the error object
+      var parameters = {
+        name: this.currentGitHubUser.login,
+        email:this.currentGitHubUser.email
+      };
+      this.$.creaetUserAgent.params = parameters;
+      this.$.creaetUserAgent.generateRequest();
+    }
+
+  };
+
+
+  app._handleCreateUserAgentError = function(event, detail){
+    console.log(detail.error); //the error object
+    console.log(detail.request.status); //the status code
+    console.log(detail.request.statusText);  //the error status text
+
+  };
+
+  app._handleCreateUserAgentResponse = function(event){
+    var response = event.target.lastResponse
+    console.log("_handleCreateUserAgentResponse :" + response);
+  }
+
+  app.errorHandler = function (e, detail){
+    console.log("request error:" + detail.error.message);
+    this.$.superToast.text = detail.error.message;
+    this.$.superToast.open();
+  };
 
 
 
@@ -822,11 +887,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     };
 
-    app.errorHandler = function (e, detail){
-      console.log("request error:"+detail.error.message);
-      this.$.superToast.text = detail.error.message;
-      this.$.superToast.open();
-    };
 
     app.cancEditProj = function(e){
       document.querySelector('.editHeader').style.display = 'block';

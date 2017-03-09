@@ -296,7 +296,7 @@
     sendFile: function(fileName,message,fileContent) {
       var postFile = this.$.postFileRequest;
       console.log("sendFile this.accessToken:"+this.accessToken);
-      var header = {Authorization: this.accessToken};
+      var header = {token: this.accessToken};
       var parameters = {
         //org: this.currentOwner,
         //repo: this.currentRepo,
