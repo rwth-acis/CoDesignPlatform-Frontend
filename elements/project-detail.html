@@ -1,0 +1,151 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="config-behavior.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/openidconnect-signin/openidconnect-signin.html">
+
+
+<dom-module id="project-detail">
+  <!-- Defines the element's style and local DOM -->
+  <template>
+    <style include="shared-styles">
+    <style>
+      :host {
+        display: block;
+        padding: 16px;
+      }
+      paper-card {
+          --paper-card-background-color: #fff;
+          width: 150px;
+          margin: 4px;
+      }
+    </style>
+    <openidconnect-signin-aware is-authorized="{{oidcAuthorized}}"
+                                on-openidconnect-signin-aware-success="_handleOidcSigninSuccess"
+                                on-openidconnect-signin-aware-signed-out="_handleOidcSignedOut"></openidconnect-signin-aware>
+    <iron-signals on-iron-signal-current-oidc-user-changed="_handleCurrentOidcUserChanged"></iron-signals>
+
+
+
+    <iron-ajax id="projectInfoLoader"
+               headers="{{header}}"
+               on-request="sentRequest"
+               last-response="{{project}}">
+    </iron-ajax>
+    <iron-ajax id="projectBranchInfoLoader"
+               headers="{{header}}"
+               on-request="sentRequest"
+               last-response="{{projectBranch}}">
+    </iron-ajax>
+
+      <paper-material elevation="1">
+        <div class="editHeader">
+            <h2>{{project.name}}</h2>
+            <div>{{project.description}}</div>
+        </div>
+      </paper-material>
+
+      <paper-dropdown-menu label="Project Branch" on-iron-select="branchSelected">
+          <paper-listbox class="dropdown-content" selected="0">
+            <template is="dom-repeat" items="{{projectBranch}}">
+              <paper-item>[[item.name]]</paper-item>
+            </template>
+          </paper-listbox>
+      </paper-dropdown-menu>
+
+      <components-list id="componentsList" loading="{{loading}}" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" access-token="{{access_token}}"></components-list>
+    <paper-toast id="successToast" duration="3500" text=""></paper-toast>
+    <paper-toast id="failToast" duration="3500" text=""></paper-toast>
+  </template>
+
+<script>
+    Polymer({
+      is: 'project-detail',
+      behaviors: [
+        ConfigBehavior
+      ],
+
+      properties: {
+        projects: {
+            type: Array,
+            notify: true
+        },
+
+        accessToken:{
+          type: String
+        },
+
+        isAuthorized:{
+          type: Boolean
+        },
+
+        header:{
+          type: String
+        },
+        currentProject:{
+          type: String
+        },
+
+      },
+
+      attached: function()
+      {
+        // var parameters = {
+        //   org: this._GitHubOrg,
+        // };
+        //this.$.projectsLoader.params = parameters;
+      },
+
+
+      /**
+      * Loads the project info page and the components in the master branch
+      *
+      * @param projectName the name of the project to load.
+      */
+      load: function(projectName) {
+        this.currentProject = projectName;
+        // load the information of the project
+        var projectInfoUrl = this._apiBaseUrl + '/projectinfo';
+        this.$.projectInfoLoader.url = projectInfoUrl;
+
+        var parameters = {
+          org: this._GitHubOrg,
+          repo: this.currentProject,
+        };
+        this.$.projectInfoLoader.params = parameters;
+        this.$.projectInfoLoader.generateRequest();
+
+        // load the branches of the project
+        var projectBranchInfoUrl = this._apiBaseUrl + '/projectbranchinfo';
+        this.$.projectBranchInfoLoader.url = projectBranchInfoUrl;
+        this.$.projectBranchInfoLoader.params = parameters;
+        this.$.projectBranchInfoLoader.generateRequest();
+
+        this.loadComponentsList(projectName, "master");
+      },
+
+      branchSelected:function(e){
+        var selectedItem = e.target.selectedItem;
+        if (selectedItem){
+          console.log("selected: " + selectedItem.innerText);
+          this.loadComponentsList(this.currentProject, selectedItem.innerText);
+        }
+      },
+
+      // load the components of the project
+      loadComponentsList: function(projectName,branchName){
+        var componentsListAjaxParams = {
+          org: this._GitHubOrg,
+          repo: projectName,
+          branch: branchName
+        };
+        this.$.componentsList.projectContentsUrl = this._apiBaseUrl+'/components';
+        this.$.componentsList.ajaxHeader = this.header;
+        this.$.componentsList.ajaxParams = componentsListAjaxParams;
+        this.$.componentsList.load();
+      },
+
+
+
+    });
+  </script>
+</dom-module>

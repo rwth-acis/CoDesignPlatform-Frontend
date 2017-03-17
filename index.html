@@ -159,9 +159,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <!-- <div id="headerContainer"> -->
         <!-- Main Toolbar -->
         <paper-toolbar id="mainToolbar">
-          <template is="dom-if" if="{{componentPage(route)}}">
+          <!-- <template is="dom-if" if="{{componentPage(route)}}">
             <paper-icon-button id="paperToggle" icon="menu" on-tap="toggCompDrawer"></paper-icon-button>
-          </template>
+          </template> -->
           <div class="app-name">
             <a href$="{{baseUrl}}">
               Co-Design Platform
@@ -181,7 +181,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                 is-authorized="{{oidcAuthorized}}"
                                 on-openidconnect-signin-aware-success="_handleSigninSuccessApp"
                                 on-openidconnect-signin-aware-signed-out="_handleOidcSignedOut"></openidconnect-signin>
-          
+
           <github-signin id="githubSignInBtn" is-authorized="{{isAuthorized}}" scopes="repo" client-id="b6d65034ff402a6e6f4d" server="https://github.com/login/oauth/authorize" base-href={{baseHref}}></github-signin>
         </paper-toolbar>
       <!-- </div> -->
@@ -228,85 +228,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <!-- <div class="content" style="height:100%"> -->
       <div class="content" style="height:100%;">
         <iron-pages attr-for-selected="data-route" selected="{{route}}" style="height:100%;">
+
           <section data-route="home" href="{{baseUrl}}" style="height:100%;">
-            <projects-list name="projects" id="projectsList" access-token={{access_token}} ajax-header={{header}}></projects-list>
+            <!-- <projects-list name="projects" id="projectsList" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" org-name="{{gitHubOrg}}" access-token="{{access_token}}" ajax-params="{{ajaxParamsGitHubOrg}}" header="{{header}}"></projects-list> -->
           </section>
 
 
           <section id="projectsSection" data-route="projects" href="{{baseUrl}}projects" style="height:100%;">
+              <projects-list name="projects" id="projectsList" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" org-name="{{gitHubOrg}}" access-token="{{access_token}}" ajax-params="{{ajaxParamsGitHubOrg}}" header="{{header}}"></projects-list>
+          </section>
 
-            <!-- <paper-scroll-header-panel id="scrollProjects" class="flex"> -->
-              <projects-list name="projects" id="projectsList" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" org-name="{{gitHubOrg}}" access-token="{{access_token}}" ajax-params="{{ajaxParamsGitHubOrg}}" ajax-header="{{header}}"></projects-list>
-            <!-- </paper-scroll-header-panel> -->
-
-            <template is="dom-if" if="{{isAuthorized}}">
-              <paper-fab id="createProjectBtn" class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>
-            </template>
-
-
-            <!-- Dialog: CREATE NEW PROJECT -->
-            <paper-dialog id="createProject" class="create" entry-animation="fade-in-animation"
-            exit-animation="fade-out-animation" modal
-            on-iron-overlay-closed="onCreateProjectClosed">
-              <h2>Create a Project</h2>
-              <p>Project Name</p>
-              <paper-input char-counter maxlength="50" label$="[[formTitle]]" id="newProjectTitle"></paper-input>
-              <p>Project Description</p>
-              <paper-textarea label="[[formDesc]]" id="newProjectDesc"></paper-textarea>
-
-              <div class="buttons">
-                <paper-button dialog-dismiss>Cancel</paper-button>
-                <paper-button dialog-confirm autofocus>Save</paper-button>
-              </div>
-            </paper-dialog>
-
-          <iron-ajax
-              id="postProjectRequest"
-              handle-as="json"
-              url="{{baseHref}}/createproject"
-              content-type="application/json"
-              method="POST"
-              headers="{{header}}"
-              on-request="sentRequest"
-              on-response="handleResponseProject"
-              on-error="errorHandler">
-          </iron-ajax>
-
-          <paper-toast id="projToast"></paper-toast>
-        </section>
-
-        <!-- LIST OF COMPONENTS OF A PROJECT -->
-        <section data-route="project-info" href="{{baseUrl}}project-info" style="height:100%;">
-          <iron-ajax id="projectInfoLoader"
-                     on-request="sentRequest"
-                     last-response="{{project}}">
-          </iron-ajax>
-          <iron-ajax id="projectBranchInfoLoader"
-                     on-request="sentRequest"
-                     last-response="{{projectBranch}}">
-          </iron-ajax>
-
-          <!-- <paper-scroll-header-panel id="scrollComponents"> -->
-            <paper-material elevation="1">
-              <div class="editHeader">
-                  <h2>{{project.name}}</h2>
-                  <div>{{project.description}}</div>
-              </div>
-            </paper-material>
-
-            <paper-dropdown-menu label="Project Branch" on-iron-select="branchSelected">
-                <paper-listbox class="dropdown-content" selected="0">
-                  <template is="dom-repeat" items="{{projectBranch}}">
-                    <paper-item>[[item.name]]</paper-item>
-                  </template>
-                </paper-listbox>
-            </paper-dropdown-menu>
-
-            <components-list id="componentsList" loading="{{loading}}" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" access-token="{{access_token}}"></components-list>
-
-          <!-- </paper-scroll-header-panel> -->
-
-        </section>
+          <!-- LIST OF COMPONENTS OF A PROJECT -->
+          <section data-route="project-info" href="{{baseUrl}}project-info" style="height:100%;">
+            <project-detail name="projectDetail" id="projectDetail" header="{{header}}" is-authorized="{{isAuthorized}}" access-token="{{access_token}}"><project-detail>
+          </section>
 
         <!-- SIGNLE COMPONENTS OF A PROJECT -->
         <section data-route="component-info" href="{{baseUrl}}component-info" style="height:100%;">

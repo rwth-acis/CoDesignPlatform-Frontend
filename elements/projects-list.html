@@ -1,11 +1,13 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="config-behavior.html">
+<link rel="import" href="shared-styles.html">
 <link rel="import" href="../bower_components/openidconnect-signin/openidconnect-signin.html">
 
 
 <dom-module id="projects-list">
   <!-- Defines the element's style and local DOM -->
   <template>
+    <style include="shared-styles">
     <style>
       :host {
         display: block;
@@ -23,27 +25,58 @@
     <iron-signals on-iron-signal-current-oidc-user-changed="_handleCurrentOidcUserChanged"></iron-signals>
 
 
-    <div>
+    <!-- <div> -->
     <iron-ajax
             id="projectsLoader"
             url="[[_apiBaseUrl]]/projects"
             last-response="{{projects}}"
-            headers="{{ajaxHeader}}"
+            headers="{{header}}"
             loading="{{loading}}"
-            on-request="sentRequest"
-            auto>
+            on-request="sentRequest">
     </iron-ajax>
 
     <!-- LIST OF PROJECTS -->
     <!-- <div class="layout horizontal center"> -->
-            <template is="dom-repeat" items="{{projects}}">
-                <paper-card heading="[[item.name]]" on-tap="onProjectTap">
+    <template is="dom-repeat" items="{{projects}}">
+      <paper-card heading="[[item.name]]" on-tap="onProjectTap">
                     <!--<div class="card-content">[[item.html_url]]</div>-->
-                </paper-card>
-            </template>
-    </div>
+      </paper-card>
+    </template>
+    <!-- </div> -->
 
-      </template>
+    <template is="dom-if" if="{{isAuthorized}}">
+      <paper-fab id="createProjectBtn" class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>
+    </template>
+    <paper-dialog id="createProjectDialog" class="create" entry-animation="fade-in-animation"
+    exit-animation="fade-out-animation" modal
+    on-iron-overlay-closed="onCreateProjectClosed">
+      <h2>Create a Project</h2>
+      <p>Project Name</p>
+      <paper-input char-counter maxlength="50" label$="[[formTitle]]" id="newProjectTitle"></paper-input>
+      <p>Project Description</p>
+      <paper-textarea label="[[formDesc]]" id="newProjectDesc"></paper-textarea>
+
+      <div class="buttons">
+        <paper-button dialog-dismiss>Cancel</paper-button>
+        <paper-button dialog-confirm autofocus>Save</paper-button>
+      </div>
+    </paper-dialog>
+
+    <iron-ajax
+      id="postProjectRequest"
+      handle-as="json"
+      url="{{baseHref}}/createproject"
+      content-type="application/json"
+      method="POST"
+      headers="{{header}}"
+      on-request="sentRequest"
+      on-response="handleResponseProject"
+      on-error="errorHandler">
+    </iron-ajax>
+
+    <paper-toast id="successToast" duration="3500" text=""></paper-toast>
+    <paper-toast id="failToast" duration="3500" text=""></paper-toast>
+  </template>
 
 <script>
     Polymer({
@@ -59,6 +92,14 @@
         },
 
         accessToken:{
+          type: String
+        },
+
+        isAuthorized:{
+          type: Boolean
+        },
+
+        header:{
           type: String
         },
 
@@ -95,9 +136,20 @@
       //  this.$.projectsLoader.generateRequest();
       // },
 
-      load: function(){
-        //console.log("load call url: " + this.$.projectsLoader.url);
-        //this.$.projectsLoader.generateRequest();
+
+
+
+      load: function() {
+        console.log("Projects-list.load()");
+        this.$.projectsLoader.generateRequest();
+      },
+
+      onCreateProjectTap: function(e) {
+        //var createDialog = document.getElementById('createProjectDialog');
+        var createDialog = this.$.createProjectDialog;
+        createDialog.open();
+        //this.createProjectDialog.open();
+        //createDialog.open();
       },
 
       onProjectTap: function (e) {
@@ -105,16 +157,63 @@
           page('/projects/' + model.item.name);
       },
 
+      // handle create project ajax request(postProjectRequest)'s response
+      handleResponseProject: function(data){
+
+        var result = data.detail.response;
+
+        // for debug
+        //console.log("JSON.stringify(result):"+JSON.stringify(result));
+
+        if(result.name != null){
+          // reload the projectsList
+          //this.$.projectsList.load();
+          this.load();
+          console.log("this.$.projectsList.load()");
+          this.$.successToast.text = 'Project created';
+          this.$.successToast.open();
+        } else {
+          //Failed : HTTP error code : 403, error msg: Forbidden
+          console.log(result.responseMessage);
+          this.$.failToast.text = "Fail to create project.";
+          this.$.failToast.open();
+
+        }
+
+      },
+
+      // to create a new repository on GitHub
+      onCreateProjectClosed: function(e) {
+        // iron-overlay-closed event
+        // event.detail is the closingReason property
+        // If the user dismisses the dialog with dialog-confirm, the closingReason will update to include confirmed: true
+        if (e.detail.confirmed) {
+          //var request = document.querySelector('#postProjectRequest');
+          var request = this.$.postProjectRequest;
+          if (this.$.newProjectDesc.value == '' || this.$.newProjectTitle.value == '' || this.$.newProjectDesc.value == null || this.$.newProjectTitle.value == null ){
+            this.$.superToast.text = "Project is not created! Fields should not be empty!";
+            this.$.superToast.open();
+          } else {
+            request.body = JSON.stringify({
+              "description": this.$.newProjectDesc.value,
+              "name": this.$.newProjectTitle.value
+            });
+            request.generateRequest();
+            console.log("request.url:"+request.url);
+            console.log("request.headers:"+request.headers);
+            console.log("request.headers.Authorization:"+request.headers.Authorization);
+            this.$.newProjectTitle.value = null;
+            this.$.newProjectDesc.value = null;
+          }
+        }
+        e.preventDefault();
+      },
+
       // for debug
       //_isAuthorizedChanged: function(newVal,oldVal){
       //   console.log("projects-list.html isAuthorized.oldVal:" + oldVal);
       //   console.log("projects-list.html isAuthorized.newVal:" + newVal);
       // },
-
-      // for debug
-      sentRequest: function(e,detail){
-        console.log("make a request detail.request.url:" + detail.request.url);
-      },
 
     });
   </script>

@@ -81,23 +81,17 @@
   last-Response="{{components}}"
   loading="{{loading}}"></iron-ajax>
 
-  <iron-ajax
-  id="treeLoader"
-  url="{{projectTreeUrl}}"
-  on-request="sentRequest"
-  last-response="{{treeComponents}}"
-  loading="{{loading}}"></iron-ajax>
-
 
   <iron-ajax
   id="postFileRequest"
   handle-as="json"
-  url="{{baseHref}}/createfile"
+  headers="{{ajaxHeader}}"
+  url="[[_apiBaseUrl]]/createfile"
   content-type="application/json"
   method="POST"
   on-request="sentRequest"
   on-response="receiveFileUpload"
-  on-error="handleError">
+  on-error="handleUploadError">
 </iron-ajax>
 
 
@@ -155,8 +149,6 @@
         type: Boolean,
         reflectToAttribute: true
       },
-      // ajax attributes initialized in app.js
-      // e.g. this.$.componentsList.projectContentsUrl
       projectContentsUrl:{
         type: String
       },
@@ -169,10 +161,7 @@
       projectTreeUrl:{
         type: String
       },
-      resourceURL: {
-        type: String,
-        computed: 'computeResourceURL(projectId)'
-      },
+
       components: {
         type: Array,
         notify: true
@@ -247,10 +236,6 @@
 
     },
 
-    computeResourceURL: function (projectId) {
-      return app.baseHref + '/projects/' + projectId + '/components/';
-    },
-
     onUploadFileTap: function(e) {
       this.showFileUploadForm = true;
     },
@@ -302,16 +287,13 @@
     // send file via backend service to GitHub
     sendFile: function(fileName,message,fileContent) {
       var postFile = this.$.postFileRequest;
-      console.log("sendFile this.accessToken:"+this.accessToken);
-      var header = {token: this.accessToken};
       var parameters = {
         //org: this.currentOwner,
         //repo: this.currentRepo,
-        org: this.ajaxParams.org, //ajaxParams defined in app.js
+        org: this.ajaxParams.org, //ajaxParams defined in project-detail.html
         repo: this.ajaxParams.repo,
         path: fileName
       };
-      postFile.headers = header;
       postFile.params = parameters;
       postFile.body = JSON.stringify({
         "branch": this.ajaxParams.branch,
@@ -357,12 +339,24 @@
       console.log("componentsList.load()");
       // load the content of the repo, default branch: master
       // e.g. https://api.github.com/repos/Co-Design-Platform/koala/contents?ref=master
+
+      // the backend service changed one of responses (download_url) from github
+      /*
+				 * the original download_url from GitHub is like:
+				 * https://raw.githubusercontent.com/Co-Design-Platform/panda/master/bear.svg but this svg cannot be shown on browser
+				 * directly within <img> because GitHub sends text/plain header
+				 * see
+				 * http://stackoverflow.com/questions/13808020/include-an-svg-hosted-on-github-in-markdown and
+				 * https://github.com/isaacs/github/issues/316
+         * so we need to replace download_url in order to show svg on browser
+			*/
       this.projectName = this.$.componentsLoader.params.repo;
       this.$.componentsLoader.generateRequest();
 
-      // load the master tree of the repo
-      // e.g. https://api.github.com/repos/Co-Design-Platform/koala/git/trees/master
-
+      // foe debug
+      // console.log("components-list sendFile params org："+this.ajaxParams.org);
+      // console.log("components-list sendFile params repo："+this.ajaxParams.repo);
+      // console.log("components-list sendFile params branch："+this.ajaxParams.branch);
 
     },
 
@@ -381,7 +375,7 @@
         this.load();
         this.$.successToast.text = 'File Created';
         this.$.successToast.open();
-      }else{ // will be handled in handleError
+      }else{ // will be handled in handleUploadError
         //Failed : HTTP error code : 403, error msg: Forbidden
         console.log("fail to create a file: " + event.detail.statusText);
         console.log("response.errorStreamString: " + response.errorStreamString);
@@ -394,7 +388,7 @@
       }
 
     },
-    handleError: function(e, detail) {
+    handleUploadError: function(e, detail) {
       console.log(detail.request.status); //the status code, e.g. 422
       console.log(detail.request.statusText);  //the error status text, here is empty
       console.log(e.detail.request.xhr.response); // the whole reponse object
@@ -408,47 +402,6 @@
       }
       this.$.failToast.open();
     },
-
-    // for debug
-    sentRequest: function(e,detail){
-      console.log("componenets-list make a request detail.request.url:"+detail.request.url);
-    },
-
-
-
-
-
-
-
-
-
-    // the original download_url from GitHub is like:
-    // https://raw.githubusercontent.com/Co-Design-Platform/panda/master/bear.svg
-    // but this svg cannot be shown on browser directly within <img>
-    // because GitHub sends text/plain header
-    // see http://stackoverflow.com/questions/13808020/include-an-svg-hosted-on-github-in-markdown
-    // and https://github.com/isaacs/github/issues/316
-    //
-    // changeComponents: function(array){
-    //   var cLength = array.length;
-    //   console.log("cLength:"+cLength);
-    //
-    //   for (i = 0; i < cLength; i++) {
-    //     var item = this.get(['array', i]);
-    //     console.log("name:"+item.name);
-    //     console.log("download_url:"+item.download_url);
-    //     src = item.download_url;
-    //     var res = src.replace("raw.githubusercontent.com", "cdn.rawgit.com");
-    //     console.log("res:"+res);
-    //     this.components[i].download_url = res;
-    //     this.notifyPath('components[i].download_url');
-    //     console.log("new components.download_url:"+this.components[i].download_url);
-    //   }
-    //
-    //   return components;
-    //
-    // },
-
 
   });
 })();
