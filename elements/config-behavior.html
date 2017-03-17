@@ -2,69 +2,107 @@
 
 <script>
 
-  GlobalConfig = [];
-  GlobalConfig.language = 'en';
+GlobalConfig = [];
+GlobalConfig.language = 'en';
 
-  ConfigBehavior = {
+ConfigBehavior = {
 
-    properties: {
-      _apiBaseUrl: {
-        type: String,
-        value: 'http://localhost:8080/template'
-      },
-
-      _frontendBasePath: {
-        type: String,
-        value: '/'
-      },
-
-      _GitHubOrg: {
-        type: String,
-        value: 'Co-Design-Platform'
-      },
-
-      currentUser: {
-        type: String,
-        value: function() { return GlobalConfig.currentUser; },
-        observer: '_currentUserChanged'
-      },
-
-      currentGitHubUser:{
-        type: Object,
-        value: function() { return GlobalConfig.currentGitHubUser; },
-        observer: '_currentGitHubUserChanged'
-      },
-      /**
-       * Defines whether the user is logged in or not.
-       */
-      authorized: {
-        type: Boolean
-      },
-      authHeader: {
-        type: Array
-      }
+  properties: {
+    _apiBaseUrl: {
+      type: String,
+      value: 'http://localhost:8080/template'
     },
 
-    /**
-     * Went for set* method as in the Polymer object, this.currentUser didn't call this setter.
-     *
-     * @param newValue
-     */
-
-    setCurrentGitHubUser: function(newValue){
-      GlobalConfig.currentGitHubUser = newValue;
+    _frontendBasePath: {
+      type: String,
+      value: '/'
     },
 
-    setCurrentUser: function(newValue){
-      GlobalConfig.currentUser = newValue;
+    _GitHubOrg: {
+      type: String,
+      value: 'Co-Design-Platform'
     },
 
-    _currentGitHubUserChanged: function(newValue) {
-      console.log("_currentGitHubUserChanged:"+newValue);
-      GlobalConfig.currentGitHubUser = newValue;
-      //this.fire('iron-signal', {name: 'current-user-changed', data: newValue});
+    commentWriterGroup:{
+      type: String,
+      value: 'yuwenhuang813,yuwenhuang.cs97g'
     },
 
+    commentReaderGroup:{
+      type: String,
+      value: 'yuwenhuang813,yuwenhuang.cs97g'
+    },
 
+    currentOidcUser: {
+      type: String,
+      value: function() {
+        console.log("currentOidcUser:" + GlobalConfig.currentOidcUser);
+        return GlobalConfig.currentOidcUser;
+      },
+      observer: '_currentOidcUserChanged'
+    },
+
+    currentGitHubUser:{
+      type: Object,
+      value: function() { return GlobalConfig.currentGitHubUser; },
+      observer: '_currentGitHubUserChanged'
+    },
+
+    oidcAuthorized: {
+      type: Boolean
+    },
+
+    oidcAuthHeader: {
+      type: Array
+    },
+  },
+
+
+  setCurrentOidcUser: function(newValue) {
+    GlobalConfig.currentOidcUser = newValue;
+  },
+
+  _currentOidcUserChanged: function(newValue,oldValue) {
+    GlobalConfig.currentOidcUser = newValue;
+    console.log("_currentOidcUserChanged old user:" + oldValue);
+    console.log("_currentOidcUserChanged new user:" + newValue);
+    this.fire('iron-signal', {name: 'current-oidc-user-changed', data: newValue});
+  },
+
+  _handleCurrentOidcUserChanged: function(e, detail) {
+    console.log("_handleCurrentOidcUserChanged:"+detail);
+    this.currentOidcUser = detail;
+  },
+
+  setCurrentGitHubUser: function(newValue){
+    GlobalConfig.currentGitHubUser = newValue;
+  },
+
+  setCurrentUser: function(newValue){
+    GlobalConfig.currentUser = newValue;
+  },
+
+  _currentGitHubUserChanged: function(newValue) {
+    console.log("_currentGitHubUserChanged:"+newValue);
+    GlobalConfig.currentGitHubUser = newValue;
+    //this.fire('iron-signal', {name: 'current-user-changed', data: newValue});
+  },
+
+  _handleOidcSigninSuccess: function(e) {
+    this.oidcAuthorized = true;
+    this.oidcAuthHeader = {authorization: "Bearer " + e.detail.access_token};
+    this.oidcAccessToken = e.detail.access_token;
+    console.log("oidc header: "+this.oidcAuthHeader);
+    var getAgentRequest = document.querySelector('#getCurrentUserAgent');
+    getAgentRequest.headers = this.oidcAuthHeader;
+    getAgentRequest.generateRequest();
+  },
+
+  _handleOidcSignedOut: function(e) {
+    this.oidcAuthorized = false;
+    this.oidcAuthHeader = null;
+    this.currentUserAgent = null;
   }
+
+}
 </script>

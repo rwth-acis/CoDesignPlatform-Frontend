@@ -170,7 +170,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <template is="dom-if" if="{{isAuthorized}}">
             <span class="flex"></span>
             <div class="currentGitHubUser">
-              Welcome! [[currentGitHubUser.login]] Your GitHub email is [[currentGitHubUser.email]] currentAgent[[currentUserAgent]]
+              Welcome [[currentGitHubUser.login]]! Your GitHub email is [[currentGitHubUser.email]], currentAgent is [[currentUserAgent]]
             </div>
           </template>
           <span class="flex"></span>
@@ -178,11 +178,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <openidconnect-signin id="openidconnectSignin" scopes="openid email profile"
                                 client-id="73e44d81-9b15-4086-a0d7-b7edc399752e"
                                 server="https://api.learning-layers.eu/o/oauth2"
-                                is-authorized="{{_authorized}}"
+                                is-authorized="{{oidcAuthorized}}"
                                 on-openidconnect-signin-aware-success="_handleSigninSuccessApp"
-                                on-openidconnect-signin-aware-signed-out="_handleSignedOut"></openidconnect-signin>
-
-
+                                on-openidconnect-signin-aware-signed-out="_handleOidcSignedOut"></openidconnect-signin>
+          
           <github-signin id="githubSignInBtn" is-authorized="{{isAuthorized}}" scopes="repo" client-id="b6d65034ff402a6e6f4d" server="https://github.com/login/oauth/authorize" base-href={{baseHref}}></github-signin>
         </paper-toolbar>
       <!-- </div> -->
@@ -312,13 +311,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <!-- SIGNLE COMPONENTS OF A PROJECT -->
         <section data-route="component-info" href="{{baseUrl}}component-info" style="height:100%;">
           <component-detail id="componentDetail"
-          base-href="{{baseHref}}"
           is-authorized="{{isAuthorized}}"
           access-token="{{access_token}}"
-          current-git-hub-user={{currentGitHubUser}}
-          current-oidc-user={{currentOidcUser}}
-          oidc-auth-header={{oidcAuthHeader}}
-          oidc-access-token={{oidcAccessToken}}></component-detail>
+          current-git-hub-user="{{currentGitHubUser}}"
+          current-user-agent="{{currentUserAgent}}"
+          current-oidc-user="{{currentOidcUser}}"
+          oidc-auth-header="{{oidcAuthHeader}}"
+          oidc-access-token="{{oidcAccessToken}}"></component-detail>
+          <!-- current-oidc-user={{currentOidcUser}} -->
+
         </section>
 
 

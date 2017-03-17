@@ -1,5 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="config-behavior.html">
+<link rel="import" href="../bower_components/openidconnect-signin/openidconnect-signin.html">
 
 
 <dom-module id="projects-list">
@@ -16,6 +17,11 @@
           margin: 4px;
       }
     </style>
+    <openidconnect-signin-aware is-authorized="{{oidcAuthorized}}"
+                                on-openidconnect-signin-aware-success="_handleOidcSigninSuccess"
+                                on-openidconnect-signin-aware-signed-out="_handleOidcSignedOut"></openidconnect-signin-aware>
+    <iron-signals on-iron-signal-current-oidc-user-changed="_handleCurrentOidcUserChanged"></iron-signals>
+
 
     <div>
     <iron-ajax

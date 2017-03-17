@@ -1,10 +1,13 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="shared-styles.html">
 <link rel="stylesheet" href="../styles/main.css">
+<link rel="import" href="../bower_components/openidconnect-signin/openidconnect-signin.html">
 
 
 <dom-module id="components-list">
   <template>
+  <style include="shared-styles">
   <style>
   :host {
     display: block;
@@ -60,13 +63,14 @@
     right: 30px;
   }
 
-  #toast {
-    --paper-toast-background-color: red;
-    --paper-toast-color: white;
-  }
 
 
   </style>
+
+  <openidconnect-signin-aware is-authorized="{{oidcAuthorized}}"
+                              on-openidconnect-signin-aware-success="_handleOidcSigninSuccess"
+                              on-openidconnect-signin-aware-signed-out="_handleOidcSignedOut"></openidconnect-signin-aware>
+  <iron-signals on-iron-signal-current-oidc-user-changed="_handleCurrentOidcUserChanged"></iron-signals>
 
   <iron-ajax
   id="componentsLoader"
@@ -123,8 +127,8 @@
     </form>
   </template>
 
-  <paper-toast id="toast" duration="3500" text="">
-  </paper-toast>
+  <paper-toast id="successToast" duration="3500" text=""></paper-toast>
+  <paper-toast id="failToast" duration="3500" text=""></paper-toast>
 
 </template>
 
@@ -134,6 +138,9 @@
 
   Polymer({
     is: 'components-list',
+    behaviors: [
+      ConfigBehavior
+    ],
     properties: {
       projectId: {
         type: Number
@@ -372,7 +379,8 @@
         console.log("upload success");
         // reload the componentsList
         this.load();
-        this.$.toast.text = 'File Created';
+        this.$.successToast.text = 'File Created';
+        this.$.successToast.open();
       }else{ // will be handled in handleError
         //Failed : HTTP error code : 403, error msg: Forbidden
         console.log("fail to create a file: " + event.detail.statusText);
@@ -380,9 +388,11 @@
         console.log("response.responseCode: " + response.responseCode);
         console.log("response.responseMessage: " + response.responseMessage);
 
-        this.$.toast.text =('Create File Fail: '+event.detail.statusText);
+        this.$.failToast.text =('Create File Fail: '+event.detail.statusText);
+        this.$.failToast.open();
+
       }
-      this.$.toast.open();
+
     },
     handleError: function(e, detail) {
       console.log(detail.request.status); //the status code, e.g. 422
@@ -390,8 +400,13 @@
       console.log(e.detail.request.xhr.response); // the whole reponse object
       console.log(e.detail.request.xhr.response.responseMessage); // e.g.Unprocessable Entity
 
-      this.$.toast.text =("Create File Fail");
-      this.$.toast.open();
+      if(detail.request.status == "422"){
+        this.$.failToast.text = "Create File Fail: The file is already existed.";
+      }
+      else{
+        this.$.failToast.text = "Create File Fail";
+      }
+      this.$.failToast.open();
     },
 
     // for debug

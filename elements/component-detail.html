@@ -1,9 +1,12 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="config-behavior.html">
+<link rel="import" href="shared-styles.html">
+
 
 <dom-module id="component-detail">
   <template>
+  <style include="shared-styles">
   <style>
   :host {
     display: block;
@@ -61,8 +64,8 @@
 
   paper-material {
     background: transparent;
-    height: calc(100% - 60px);
-    width: calc(100% - 60px);
+    height: calc(100% - 80px);
+    width: calc(100% - 80px);
     margin: auto;
   }
 
@@ -81,13 +84,14 @@
   }
 */
 
-
-  #toast {
-    --paper-toast-background-color: red;
-    --paper-toast-color: white;
-  }
-
   </style>
+
+  <openidconnect-signin-aware is-authorized="{{oidcAuthorized}}"
+                              on-openidconnect-signin-aware-success="_handleOidcSigninSuccess"
+                              on-openidconnect-signin-aware-signed-out="_handleOidcSignedOut"></openidconnect-signin-aware>
+
+  <iron-signals on-iron-signal-current-oidc-user-changed="_handleCurrentOidcUserChanged"></iron-signals>
+
 
   <iron-ajax
   id="componentInfoLoader"
@@ -95,16 +99,16 @@
   url="[[_apiBaseUrl]]/componentinfo"
   content-type="application/json"
   method="GET"
-  on-request="_sentRequest"
+  on-request="sentRequest"
   on-response="_handleComponentInfoResponse"
-  on-error="_handleError"></iron-ajax>
+  on-error="handleError"></iron-ajax>
 
   <iron-ajax
   id="svgContentLoader"
   url="[[_apiBaseUrl]]/getsvgcontent"
   handle-as="document"
-  on-request="_sentRequest"
-  on-response="_handleSvgContentResponse"></iron-ajax>
+  on-request="sentRequest"
+  on-response="handleSvgContentResponse"></iron-ajax>
 
   <iron-ajax
   id="updateFileRequest"
@@ -112,29 +116,36 @@
   url="[[_apiBaseUrl]]/updatefile"
   content-type="application/json"
   method="POST"
-  on-request="_sentRequest"
-  on-response="_receiveFileUpload"
-  on-error="_handleUpdateError"></iron-ajax>
+  on-request="sentRequest"
+  on-response="_receiveFileUpdate"
+  on-error="handleUpdateError"></iron-ajax>
+
+  <iron-ajax
+  id="addCommentToFileRequest"
+  handle-as="json"
+  url="[[_apiBaseUrl]]/updatefile"
+  content-type="application/json"
+  method="POST"
+  on-request="sentRequest"
+  on-response="receiveAddCommentToFile"
+  on-error="handleUpdateError"></iron-ajax>
 
   <iron-ajax
   id="createCommentThreadRequest"
   handle-as="text"
   content-type="text/plain"
   method="POST"
-  on-request="_sentRequest"
-  on-response="_receiveCreateCommentResponse"
-  on-error="_handleCreateCommentError"></iron-ajax>
+  on-request="sentRequest"
+  on-response="receiveCreateCommentResponse"
+  on-error="handleCreateCommentError"></iron-ajax>
 
 
   <paper-dialog id="commentsDialog" on-iron-overlay-closed="deleteLeftoverComment" entry-animation="fade-in-animation" exit-animation="fade-out-animation"
   style="min-width:40%; max-width:85%; top:100px; max-height: 80%; overflow:scroll;">
-  <!-- <h2 id="comment">Annotations</h2> -->
-  <!-- <las2peer-comment-thread-widget id="commentsWidget" login-name="[[currentGitHubUser.login]]" login-password="[[currentGitHubUser.login]]"></las2peer-comment-thread-widget> -->
     <las2peer-comment-thread-widget id="commentsWidget"
     login-oidc-provider='https://api.learning-layers.eu/o/oauth2'
     login-oidc-token={{oidcAccessToken}}>
     </las2peer-comment-thread-widget>
-
   </paper-dialog>
 
   <template is="dom-if" if="{{isAuthorized}}">
@@ -157,8 +168,8 @@
     </form>
   </template>
 
-  <paper-toast id="toast" duration="3500" text="">
-  </paper-toast>
+  <paper-toast id="successToast" duration="5000" text=""></paper-toast>
+  <paper-toast id="failToast" duration="3500" text=""></paper-toast>
 
 </template>
 
@@ -203,7 +214,11 @@
       currentGitHubUser:{
         type: Object
       },
-      currentOidcUser:{
+      // currentOidcUser:{
+      //   type: String,
+      //   notify: true
+      // },
+      currentUserAgent:{
         type: String
       },
       oidcAuthHeader:{
@@ -299,13 +314,6 @@
 
     load: function() {
 
-
-      //this.setThread();
-      //this.setUser();
-      //console.log("this.currentGitHubUser.login:" + this.currentGitHubUser.login);
-      //console.log("this.currentGitHubUser.email:" + this.currentGitHubUser.email);
-
-
       // load this component's info
       var header = {token: this.accessToken};
       var params =  {
@@ -343,8 +351,8 @@
     },
 
 
-    _handleSvgContentResponse: function(event){
-      console.log("__handleSvgContentResponse... ");
+    handleSvgContentResponse: function(event){
+      console.log("_handleSvgContentResponse... ");
       console.log(event.detail.response);
       response = event.detail.response; // it is xml format
       //svgResult = response.querySelectorAll('svg');
@@ -405,20 +413,25 @@
     // make red hightlight dot-line
     this.highlightEl(snapEl);
 
+
+    console.log("this.currentOidcUser:"+this.currentOidcUser);
+    // check oidc authorization, otherwise cannot read comment
     // if has commentId attribute , show existed comment (need comment id)
-    if(commentId!=null || commentId!=undefined){
-      var comments = this.$.commentsWidget;
-      comments.setAttribute("thread", commentId);
-      var commentsDialogNode = this.$.commentsDialog;
-      commentsDialogNode.open();
-    }
-    else{
+    if(this.currentOidcUser!=null&&this.currentOidcUser!=undefined){
+      if(commentId!=null || commentId!=undefined){
+        var comments = this.$.commentsWidget;
+        comments.setAttribute("thread", commentId);
+        var commentsDialogNode = this.$.commentsDialog;
+        commentsDialogNode.open();
+      }else{
     // else createComment & add commentId in file & update file
-      this.createCommentThread();
+    // !need to check oidc & GitHub authorization!!
+          this.createCommentThread();
+      }
+    }else{
+        this.$.failToast.text = ("Please Sign In.");
+        this.$.failToast.open();
     }
-
-
-
   },
 
 
@@ -435,14 +448,14 @@
     console.log(s);
     var newSvgContent = this.$.svgOut.firstElementChild;
     console.log(newSvgContent);
-    this.testAddSvgAttr(newSvgContent,selectedElementId);
+    this.updateCommentIdtoFile(newSvgContent,selectedElementId);
   },
 
-  testAddSvgAttr: function(newContent,elementId){
+  updateCommentIdtoFile: function(newContent,elementId){
     var newContentString = new XMLSerializer().serializeToString(newContent); // from xml to string
     var fileContent = btoa(newContentString); // from string to base64
     var fileName = this.componentModel.name;
-    this._sendFile(fileName,"add comment to element: "+elementId,fileContent);
+    this.sendFile(fileName,"add comment to element: "+elementId,fileContent);
   },
 
   highlightEl: function(el){
@@ -480,8 +493,8 @@
     commentRequest.headers = header;
     commentRequest.body = JSON.stringify({
       "owner": this.currentOidcUser,
-      "writer": this.currentOidcUser,
-      "reader": this.currentOidcUser
+      "writer": this.currentOidcUser +"," + this.commentWriterGroup,
+      "reader": this.currentOidcUser +"," + this.commentReaderGroup,
     });
 
     //commentRequest.setRequestHeader("Authorization", "Basic " + btoa("User A:userAPass"));
@@ -489,23 +502,24 @@
     commentRequest.generateRequest();
   },
 
-  _receiveCreateCommentResponse: function(event){
+  receiveCreateCommentResponse: function(event){
     var statusCode = event.detail.status;
-    console.log("_receiveCreateCommentResponse event.detail:" + event.detail);
-    console.log("_receiveCreateCommentResponse:" + event.target.lastResponse);
-    console.log("_receiveCreateCommentResponse statusCode:" + statusCode);
+    console.log("receiveCreateCommentResponse event.detail:" + event.detail);
+    console.log("receiveCreateCommentResponse:" + event.target.lastResponse);
+    console.log("receiveCreateCommentResponse statusCode:" + statusCode);
 
     if(statusCode == '201'){
       localStorage.setItem("thread", event.target.lastResponse);
       this.setThread();
-      this.addCommentIdToFile(event.target.lastResponse);
-      var commentsDialogNode = this.$.commentsDialog;
-      commentsDialogNode.open();
 
+      // add comment id to the selected SVG element and update to GitHub
+      this.addCommentIdToFile(event.target.lastResponse);
+      // var commentsDialogNode = this.$.commentsDialog;
+      // commentsDialogNode.open();
     }
     else{
-      this.$.toast.text = ("Create Comment Thread Fail!");
-      this.$.toast.open();
+      this.$.failToast.text = ("Create Comment Thread Fail!");
+      this.$.failToast.open();
     }
   },
 
@@ -600,16 +614,16 @@ updateFile(event) {
     var that = this;
     reader.onload = function () {
       var base64Content = that._arrayBufferToBase64(reader.result);
-      that._sendFile(fileName,message,base64Content);
+      that.sendFile(fileName,message,base64Content);
     }
   }else{
-    this.$.toast.text = ("File name not match. Please update the same file.");
-    this.$.toast.open();
+    this.$.failToast.text = ("File name not match. Please update the same file.");
+    this.$.failToast.open();
   }
 },
 
 // send file via backend service to GitHub
-_sendFile: function(fileName,message,fileContent) {
+sendFile: function(fileName,message,fileContent) {
   var updateRequest = this.$.updateFileRequest;
   var header = {token: this.accessToken};
   var parameters = {
@@ -632,9 +646,9 @@ _sendFile: function(fileName,message,fileContent) {
   updateRequest.generateRequest();
 },
 
-_receiveFileUpload: function(event){
+_receiveFileUpdate: function(event){
   var response = event.target.lastResponse;
-  this.showFileUploadForm = false;
+  this.showFileUpdateForm = false;
 
   var statusCode = event.detail.status;
   console.log("create a file statusCode:"+statusCode); //200
@@ -643,50 +657,80 @@ _receiveFileUpload: function(event){
   if(statusCode == '200' || statusCode == '201'){
     console.log("update success");
     //this.load();
-    this.$.toast.text = 'Update Success';
-  }else{ // will be handled in _handleUpdateError
+    this.$.successToast.text = 'Update success, waiting for reload.';
+    this.$.successToast.open();
+    setTimeout(window.location.reload.bind(window.location), 5000);
+
+  }else{ // will be handled in handleUpdateError
     //Failed : HTTP error code : 422
     console.log("fail to create a file: " + event.detail.statusText);
     console.log("response.errorStreamString: " + response.errorStreamString);
     console.log("response.responseCode: " + response.responseCode);
     console.log("response.responseMessage: " + response.responseMessage);
 
-    this.$.toast.text =('Update File Fail: '+event.detail.statusText);
+    this.$.failToast.text =('Update File Fail: '+event.detail.statusText);
+    this.$.failToast.open();
   }
-  this.$.toast.open();
 },
 
-_handleUpdateError: function(e, detail) {
+
+receiveAddCommentToFile: function(event){
+  var response = event.target.lastResponse;
+  var statusCode = event.detail.status;
+  console.log("AddCommentToFile statusCode:"+statusCode); //200
+  console.log("AddCommentToFile event.detail.statusText:"+event.detail.statusText); //OK
+
+  if(statusCode == '200' || statusCode == '201'){
+    console.log("AddCommentToFile Success");
+    //this.load();
+    this.$.successToast.text = 'Create comment thread, waiting for reload.';
+    this.$.successToast.open();
+    setTimeout(window.location.reload.bind(window.location), 5000);
+
+    var commentsDialogNode = this.$.commentsDialog;
+    commentsDialogNode.open();
+
+  }else{ // will be handled in handleUpdateError
+    //Failed : HTTP error code : 422
+    console.log("AddCommentToFile fail: " + event.detail.statusText);
+    console.log("response.errorStreamString: " + response.errorStreamString);
+    console.log("response.responseCode: " + response.responseCode);
+    console.log("response.responseMessage: " + response.responseMessage);
+
+    this.$.failToast.text =('Create comment thread Fail: '+event.detail.statusText);
+    this.$.failToast.open();
+  }
+},
+
+handleUpdateError: function(e, detail) {
   console.log(detail.request.status); //the status code, e.g. 422, 409
   console.log(detail.request.statusText);  //the error status text, here is empty
   console.log(e.detail.request.xhr.response); // the whole reponse object
   console.log(e.detail.request.xhr.response.responseMessage); // e.g.Unprocessable Entity
 
-  if(detail.request.status =='409')
-  {
-    this.$.toast.text = ("Update File Fail: File name conflict");
+  if(detail.request.status =='409'){
+    this.$.failToast.text = ("Update File Fail: Conflict");
+  }else{
+    this.$.failToast.text = ("Update File Fail");
   }
-  else{
-    this.$.toast.text = ("Update File Fail");
-  }
-  this.$.toast.open();
+  this.$.failToast.open();
 },
 
-_handleCreateCommentError: function(e, detail){
+handleCreateCommentError: function(e, detail){
   console.log(detail.request.status); //the status code, e.g. 422
   console.log(detail.request.statusText);  //the error status text, here is empty
   console.log(e.detail.request.xhr.response); // the whole reponse object
   console.log(e.detail.request.xhr.response.responseMessage); // e.g.Unprocessable Entity
 
-  this.$.toast.text =("Create Comment Fail");
-  this.$.toast.open();
+  this.$.failToast.text =("Create Comment Fail");
+  this.$.failToast.open();
 },
 
-_handleError: function(e, detail){
+handleError: function(e, detail){
   console.log(detail);
 },
 // for debug
-_sentRequest: function(e, detail){
+sentRequest: function(e, detail){
   console.log("componenet-detail make a request detail.request.url:"+detail.request.url);
 },
 

@@ -71,9 +71,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.header = null; // for access backend service
   app.accessGitHubHeader = null; // for access GitHub directly
   app.currentGitHubUser = null;
-  app.accessOpenIdHeader = null; // for access learning layer open id
-  app.oidcAccessToken = null;
-  app.currentOidcUser = null;
+  // app.accessOpenIdHeader = null; // for access learning layer open id
+  // app.oidcAccessToken = null;
+  // app.oidcAuthorized;
+  // app.currentUserAgent = null;
   app.gitHubOrg = "Co-Design-Platform";
   app.ajaxParamsGitHubOrg = {org: app.gitHubOrg};
   app.showFileUploadForm = false;
@@ -120,30 +121,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
       }
     }
-
-    // if (lang === null || lang ===''){
-    //     switch (navigator.language.substring(0,2)) {
-    //         case "en":
-    //             I18nMsg.lang = 'en';
-    //             break;
-    //         case "de":
-    //             I18nMsg.lang = 'de';
-    //             break;
-    //         case "al":
-    //             I18nMsg.lang = 'al';
-    //             break;
-    //         case "ro":
-    //             I18nMsg.lang = 'ro';
-    //             break;
-    //         default:
-    //             I18nMsg.lang = 'en';
-    //     }
-    // } else {
-    //     I18nMsg.lang = lang;
-    // }
-    //
-    // I18nMsg.url = 'locales'; // optionally use custom folder for locales.
-    //Platform.performMicrotaskCheckpoint();
   });
 
 
@@ -152,28 +129,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.$.superToast.open();
   });
 
-
   app._handleSigninSuccessApp = function(e) {
-    this._handleSigninSuccess(e);
-    //this.$.currentUserRequest.generateRequest();
+    this._handleOidcSigninSuccess(e);
 
-    // deactivate menu entry selection, just in case the login was made from the main menu
-    //this.$.mainMenu.selected = null;
-  };
-
-  app._handleSigninSuccess = function(e) {
-    this.authorized = true;
-    this.oidcAuthHeader = {authorization: "Bearer " + e.detail.access_token};
-    this.oidcAccessToken = e.detail.access_token;
-    console.log("oidc header: "+this.oidcAuthHeader);
     var getAgentRequest = document.querySelector('#getCurrentUserAgent');
     getAgentRequest.headers = this.oidcAuthHeader;
     getAgentRequest.generateRequest();
+
+  },
+
+  app._handleOidcSigninSuccess = function(e) {
+    this.oidcAuthorized = true;
+    this.oidcAuthHeader = {authorization: "Bearer " + e.detail.access_token};
+    this.oidcAccessToken = e.detail.access_token;
+    console.log("oidc header: "+this.oidcAuthHeader);
+
   };
 
-  _handleSignedOut = function(e) {
-    this.authorized = false;
+  app._handleOidcSignedOut = function(e) {
+    this.oidcAuthorized = false;
     this.oidcAuthHeader = null;
+    this.currentUserAgent = null;
   };
 
 
@@ -218,8 +194,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app._handleCurrentUserAgentResponse = function(event){
     console.log("_handleCurrentUserAgentResponse:" + event.detail.response);
+    this.currentUserAgent = event.detail.response;
     this.currentOidcUser = event.detail.response;
-    //user agent name:yuwenhuang, id:-2674945099117441909
+    //this.fire('iron-signal', {name: 'current-oidc-user-changed', data: this.currentUserAgent});
   };
 
   app._handleCurrentUserAgentError = function(event,detail){
@@ -229,13 +206,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     console.log(detail.request.status); //the status code
     console.log(detail.request.statusText);  //the error status text
 
+    document.getElementById('openidconnectSignin').signOut();
 
     // if the agent does not exist, then create it
     // backend service will create this agent
     // its passphrase = this.currentGitHubUser.login
     // its LoginName = this.currentGitHubUser.login
     // its Email = this.currentGitHubUser.email
-    if(detail.request.status == 401)
+    /*if(detail.request.status == 401)
     {
       console.log("create new agent"); //the error object
       var parameters = {
@@ -245,7 +223,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       this.$.creaetUserAgent.params = parameters;
       this.$.creaetUserAgent.generateRequest();
     }
-
+    */
   };
 
 
