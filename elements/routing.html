@@ -66,15 +66,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
 
-        page('/projects/:projectName', function(data) {
+        page('/projects/:projectName/branches/:branchName', function(data) {
             app.route = 'project-info';
             console.log("app.route:"+app.route);
             app.params = data.params;
             app.component = {};
-            app.loadProjectInfo(data.params.projectName);
+            app.loadProjectInfo(data.params.projectName,data.params.branchName);
         });
 
-        page('/projects/:projectName/components/:branchName/:componentName', function(data) {
+        page('/projects/:projectName/branches/:branchName/components/:componentName', function(data) {
             //if (app.compChanged(data.params.componentId)){
             //     app.route = 'component-info';
             //     app.params = data.params;

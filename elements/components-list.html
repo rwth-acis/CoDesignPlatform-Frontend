@@ -330,7 +330,8 @@
       this.selectedComponent["branch"] = this.ajaxParams.branch;
       // repo:
       //this.selectedComponent = e.model;
-      page('/projects/'+ this.projectName +'/components/' + this.selectedComponent.branch + '/' + this.selectedComponent.name);
+      page('/projects/'+ this.projectName +'/branches/' + this.selectedComponent.branch + '/components/' + this.selectedComponent.name);
+      //page('/projects/'+ this.projectName +'/components/' + this.selectedComponent.branch + '/' + this.selectedComponent.name);
     },
 
 
@@ -353,10 +354,10 @@
       this.projectName = this.$.componentsLoader.params.repo;
       this.$.componentsLoader.generateRequest();
 
-      // foe debug
+      // for debug
       // console.log("components-list sendFile params org："+this.ajaxParams.org);
       // console.log("components-list sendFile params repo："+this.ajaxParams.repo);
-      // console.log("components-list sendFile params branch："+this.ajaxParams.branch);
+      console.log("components-list sendFile params branch："+this.ajaxParams.branch);
 
     },
 

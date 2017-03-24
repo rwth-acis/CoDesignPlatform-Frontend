@@ -52,6 +52,20 @@
           </paper-listbox>
       </paper-dropdown-menu>
 
+      <paper-dialog id="createBranchDialog" class="create"  modal on-iron-overlay-closed="onCreateProjectClosed">
+        <h2>Create a Branch</h2>
+        <p>Branch Name</p>
+        <paper-input char-counter maxlength="50" label$="[[formTitle]]" id="newBranchTitle"></paper-input>
+        <p>Project Description</p>
+        <paper-textarea label="[[formDesc]]" id="newProjectDesc"></paper-textarea>
+
+        <div class="buttons">
+          <paper-button dialog-dismiss>Cancel</paper-button>
+          <paper-button dialog-confirm autofocus>Save</paper-button>
+        </div>
+      </paper-dialog>
+
+
       <components-list id="componentsList" loading="{{loading}}" base-href="{{baseHref}}" is-authorized="{{isAuthorized}}" access-token="{{access_token}}"></components-list>
     <paper-toast id="successToast" duration="3500" text=""></paper-toast>
     <paper-toast id="failToast" duration="3500" text=""></paper-toast>
@@ -101,7 +115,7 @@
       *
       * @param projectName the name of the project to load.
       */
-      load: function(projectName) {
+      load: function(projectName,branchName) {
         this.currentProject = projectName;
         // load the information of the project
         var projectInfoUrl = this._apiBaseUrl + '/projectinfo';
@@ -120,14 +134,19 @@
         this.$.projectBranchInfoLoader.params = parameters;
         this.$.projectBranchInfoLoader.generateRequest();
 
-        this.loadComponentsList(projectName, "master");
+        this.loadComponentsList(projectName, branchName);
       },
 
       branchSelected:function(e){
         var selectedItem = e.target.selectedItem;
-        if (selectedItem){
+        if (selectedItem != "Create new branch"){
           console.log("selected: " + selectedItem.innerText);
-          this.loadComponentsList(this.currentProject, selectedItem.innerText);
+          page('/projects/' + this.currentProject+'/branches/'+selectedItem.innerText);
+          //this.loadComponentsList(this.currentProject, selectedItem.innerText);
+          //this.load(this.currentProject,selectedItem.innerText);
+        }else if(selectedItem == "Create new branch"){
+          console.log("selected: " + "Create new branch");
+
         }
       },
 

@@ -130,6 +130,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     this.oidcAuthorized = false;
     this.oidcAuthHeader = null;
     this.currentUserAgent = null;
+    this.currentOidcUser = null;
   };
 
 
@@ -250,8 +251,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   *
   * @param projectName the name of the project to load.
   */
-  app.loadProjectInfo = function(projectName) {
-    this.$.projectDetail.load(projectName);
+  app.loadProjectInfo = function(projectName,branchName) {
+    this.$.projectDetail.load(projectName,branchName);
   };
 
 

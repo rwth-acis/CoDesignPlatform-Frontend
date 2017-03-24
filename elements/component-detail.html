@@ -128,7 +128,7 @@
   method="POST"
   on-request="sentRequest"
   on-response="receiveAddCommentToFile"
-  on-error="handleUpdateError"></iron-ajax>
+  on-error="handleAddCommentToFileError"></iron-ajax>
 
   <iron-ajax
   id="createCommentThreadRequest"
@@ -136,16 +136,19 @@
   content-type="text/plain"
   method="POST"
   on-request="sentRequest"
-  on-response="receiveCreateCommentResponse"
+  on-response="handleCreateCommentResponse"
   on-error="handleCreateCommentError"></iron-ajax>
 
 
-  <paper-dialog id="commentsDialog" on-iron-overlay-closed="deleteLeftoverComment" entry-animation="fade-in-animation" exit-animation="fade-out-animation"
-  style="min-width:40%; max-width:85%; top:100px; max-height: 80%; overflow:scroll;">
+  <paper-dialog id="commentsDialog" modal style="min-width:40%; max-width:85%; top:100px; max-height: 80%; overflow:scroll;">
+    <h2>Comments</h2>
     <las2peer-comment-thread-widget id="commentsWidget"
     login-oidc-provider='https://api.learning-layers.eu/o/oauth2'
     login-oidc-token={{oidcAccessToken}}>
     </las2peer-comment-thread-widget>
+    <div class="buttons">
+      <paper-button dialog-confirm autofocus>Close<iron-icon icon="close"></paper-button>
+    </div>
   </paper-dialog>
 
   <template is="dom-if" if="{{isAuthorized}}">
@@ -393,8 +396,8 @@
     var snapEl = Snap(e.target);
     console.log(snapEl);
 
-    selectedElementId = snapEl.node.id;
-    console.log("selectedElementId:"+selectedElementId);
+    this.selectedElementId = snapEl.node.id;
+    console.log("selectedElementId:"+this.selectedElementId);
     firstSelectedEl = snapEl;
 
     // snapEl.node.attr({a:"www.google.com"}); // doesn't work
@@ -405,19 +408,14 @@
     var commentId = s.attr("commentid");
 
     console.log("commentId:"+commentId);
-
-    // var commentsDialogNode = this.$.commentsDialog;
-    // commentsDialogNode.querySelector("#comment").innerHTML = elementId+", "+ s.attr("a") ;
-    // commentsDialogNode.open();
+    console.log("this.currentOidcUser:"+this.currentOidcUser);
 
     // make red hightlight dot-line
     this.highlightEl(snapEl);
-
-
-    console.log("this.currentOidcUser:"+this.currentOidcUser);
     // check oidc authorization, otherwise cannot read comment
     // if has commentId attribute , show existed comment (need comment id)
     if(this.currentOidcUser!=null&&this.currentOidcUser!=undefined){
+      // if the element already has a comment
       if(commentId!=null || commentId!=undefined){
         var comments = this.$.commentsWidget;
         comments.setAttribute("thread", commentId);
@@ -426,7 +424,7 @@
       }else{
     // else createComment & add commentId in file & update file
     // !need to check oidc & GitHub authorization!!
-          this.createCommentThread();
+        this.createCommentThread();
       }
     }else{
         this.$.failToast.text = ("Please Sign In.");
@@ -434,13 +432,12 @@
     }
   },
 
-
+  // add comment id to the SVG node
   addCommentIdToFile: function(id){
-    // add comment id to file & update file
     console.log("commentId:"+id);
     var domElement = this.$.svgOut.querySelector("svg");
-    var selectedElement = domElement.querySelector("#"+selectedElementId);
-    console.log("selectedElementId:"+selectedElementId);
+    var selectedElement = domElement.querySelector("#"+this.selectedElementId);
+    console.log("selectedElementId:"+this.selectedElementId);
     console.log("selectedElement:"+selectedElement);
 
     var s = Snap(selectedElement);
@@ -448,14 +445,15 @@
     console.log(s);
     var newSvgContent = this.$.svgOut.firstElementChild;
     console.log(newSvgContent);
-    this.updateCommentIdtoFile(newSvgContent,selectedElementId);
+    this.updateCommentIdtoFile(newSvgContent,this.selectedElementId,id);
   },
-
+  // update file(with commend id to GitHub)
   updateCommentIdtoFile: function(newContent,elementId){
     var newContentString = new XMLSerializer().serializeToString(newContent); // from xml to string
     var fileContent = btoa(newContentString); // from string to base64
     var fileName = this.componentModel.name;
-    this.sendFile(fileName,"add comment to element: "+elementId,fileContent);
+
+    this.sendFile("addCommentToFile",fileName,"add comment to  "+this.selectedElementId,fileContent);
   },
 
   highlightEl: function(el){
@@ -465,7 +463,7 @@
     var s = Snap(domElement);
 
     this.highlightRect = s.rect( this.rectObjFromBB( el.getBBox(1) ) )
-    .attr({ id:"annotation_"+selectedElementId, fill: "none", stroke: "red", strokeDasharray: "5,5" });
+    .attr({ id:"annotation_"+this.selectedElementId, fill: "none", stroke: "red", strokeDasharray: "5,5" });
     this.highlightRect.transform( el.transform().global.toString() );
     this.lastSelectedEl = el;
   },
@@ -484,17 +482,15 @@
     // var header = {Authorization: "Basic " + btoa(authUser)};
 
     var header = this.oidcAuthHeader;
-    //console.log("btoa(authUser):" + btoa(authUser));
-    //console.log("btoa(User A:userAPass)" + btoa("User A:userAPass") );
-    //xhttp.setRequestHeader("Authorization", "Basic " + btoa("User A:userAPass"));
-    //xhttp.send('{owner:"User A", writer:"User B,User C", reader:"User D"}');
-    //var header = {Authorization: "Basic " + btoa("User A:userAPass")};
-
     commentRequest.headers = header;
     commentRequest.body = JSON.stringify({
       "owner": this.currentOidcUser,
-      "writer": this.currentOidcUser +"," + this.commentWriterGroup,
-      "reader": this.currentOidcUser +"," + this.commentReaderGroup,
+      //"writer": this.currentOidcUser,
+      //"reader": this.currentOidcUser
+      //"writer": this.currentOidcUser +"," + this.commentWriterGroup,
+      //"reader": this.currentOidcUser +"," + this.commentReaderGroup,
+      "writer": this.commentWriterGroup,
+      "reader": this.commentReaderGroup,
     });
 
     //commentRequest.setRequestHeader("Authorization", "Basic " + btoa("User A:userAPass"));
@@ -502,23 +498,24 @@
     commentRequest.generateRequest();
   },
 
-  receiveCreateCommentResponse: function(event){
+  handleCreateCommentResponse: function(event){
     var statusCode = event.detail.status;
-    console.log("receiveCreateCommentResponse event.detail:" + event.detail);
-    console.log("receiveCreateCommentResponse:" + event.target.lastResponse);
-    console.log("receiveCreateCommentResponse statusCode:" + statusCode);
+    var commentId = event.target.lastResponse;
+    console.log("handleCreateCommentResponse event.detail:" + event.detail);
+    console.log("handleCreateCommentResponse:" + event.target.lastResponse);
+    console.log("handleCreateCommentResponse statusCode:" + statusCode);
 
     if(statusCode == '201'){
-      localStorage.setItem("thread", event.target.lastResponse);
+      localStorage.setItem("thread",commentId);
       this.setThread();
-
       // add comment id to the selected SVG element and update to GitHub
-      this.addCommentIdToFile(event.target.lastResponse);
-      // var commentsDialogNode = this.$.commentsDialog;
-      // commentsDialogNode.open();
+      this.addCommentIdToFile(commentId);
+      // open comment dialog
+      //var commentsDialogNode = this.$.commentsDialog;
+      //commentsDialogNode.open();
     }
     else{
-      this.$.failToast.text = ("Create Comment Thread Fail!");
+      this.$.failToast.text = ("Create Comment Thread Fail! Please try again.");
       this.$.failToast.open();
     }
   },
@@ -526,7 +523,6 @@
 
   setThread: function(){
     var comments = this.$.commentsWidget;
-
     if (localStorage.getItem("thread") != undefined) {
       comments.setAttribute("thread", localStorage.getItem("thread"))
     }
@@ -555,48 +551,30 @@
 
   },
 
+  _submitButton: function(event) {
+    Polymer.dom(event).localTarget.parentElement.submit();
+    event.currentTarget.parentNode.reset();
+  },
 
-  /* not working: maybe use bind?
-  svgClick: function(e){
-  console.log("click position:" + e.clientX+","+e.clientY);
-  var element = Snap.getElementByPoint(e.clientX, e.clientY);
-  var elementId = element.attr("id")
-  console.log("click element id:" + elementId);
-  element.attr({a:"www.google.com"});
-  //console.log("e.target.id:"+e.target.id); //undefined
-  console.log("this:"+this); //the whole SVG DOM => the reason that the following code doesn't work
-
-  var commentsDialogNode = this.$$('#commentsDialog'); //cannot find the node
-  console.log("this.$$('#commentsDialog').id:"+commentsDialogNode.id);
-  commentsDialogNode.querySelector("#comment").innerHTML = element.attr.id+"'s Annotations'";
-  commentsDialogNode.open();
-},
-*/
-
-_submitButton: function(event) {
-  Polymer.dom(event).localTarget.parentElement.submit();
-  event.currentTarget.parentNode.reset();
-},
-
-_cancelButton: function(event){
-  console.log("detail update button cancel");
-  event.currentTarget.parentNode.reset();
-  this.showFileUpdateForm = false;
-},
+  _cancelButton: function(event){
+    console.log("detail update button cancel");
+    event.currentTarget.parentNode.reset();
+    this.showFileUpdateForm = false;
+  },
 
 
 
-// Convert arraybuffer to base64
-// http://stackoverflow.com/questions/9267899/arraybuffer-to-base64-encoded-string
-_arrayBufferToBase64: function(buffer) {
-  var binary = '';
-  var bytes = new Uint8Array( buffer );
-  var len = bytes.byteLength;
-  for (var i = 0; i < len; i++) {
-    binary += String.fromCharCode( bytes[ i ] );
-  }
-  return window.btoa( binary );
-},
+  // Convert arraybuffer to base64
+  // http://stackoverflow.com/questions/9267899/arraybuffer-to-base64-encoded-string
+  _arrayBufferToBase64: function(buffer) {
+    var binary = '';
+    var bytes = new Uint8Array( buffer );
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+      binary += String.fromCharCode( bytes[ i ] );
+    }
+    return window.btoa( binary );
+  },
 
 // Send requests
 updateFile(event) {
@@ -614,7 +592,7 @@ updateFile(event) {
     var that = this;
     reader.onload = function () {
       var base64Content = that._arrayBufferToBase64(reader.result);
-      that.sendFile(fileName,message,base64Content);
+      that.sendFile("updateFile",fileName,message,base64Content);
     }
   }else{
     this.$.failToast.text = ("File name not match. Please update the same file.");
@@ -623,27 +601,38 @@ updateFile(event) {
 },
 
 // send file via backend service to GitHub
-sendFile: function(fileName,message,fileContent) {
-  var updateRequest = this.$.updateFileRequest;
-  var header = {token: this.accessToken};
-  var parameters = {
-    org: this.orgName,
-    repo: this.projectName,
-    path: fileName,
-  };
-  updateRequest.headers = header;
-  updateRequest.params = parameters;
+sendFile: function(requestType,fileName,message,fileContent) {
+  var request = "undefined";
 
-  console.log("update branch:"+this.branchName);
-  console.log("update sha:"+this.componentModel.sha);
-  updateRequest.body = JSON.stringify({
-    "branch": this.branchName,
-    "sha": this.componentModel.sha,
-    "message": message,
-    "content": fileContent
-  });
-  console.log("update body:"+updateRequest.body);
-  updateRequest.generateRequest();
+  if(requestType == "updateFile"){
+    var request = this.$.updateFileRequest;
+    console.log("sendFile requestType:"+requestType);
+  }else if(requestType == "addCommentToFile"){
+    var request = this.$.addCommentToFileRequest;
+    console.log("sendFile requestType:"+requestType);
+  }
+  if(request!="undefined"){
+    var header = {token: this.accessToken};
+    var parameters = {
+      org: this.orgName,
+      repo: this.projectName,
+      path: fileName,
+    };
+    request.headers = header;
+    request.params = parameters;
+
+    console.log("update branch:"+this.branchName);
+    console.log("update sha:"+this.componentModel.sha);
+    request.body = JSON.stringify({
+      "branch": this.branchName,
+      "sha": this.componentModel.sha,
+      "message": message,
+      "content": fileContent
+    });
+    request.generateRequest();
+  }else{
+    console.log("sendFile requestType undefined.");
+  }
 },
 
 _receiveFileUpdate: function(event){
@@ -657,10 +646,12 @@ _receiveFileUpdate: function(event){
   if(statusCode == '200' || statusCode == '201'){
     console.log("update success");
     //this.load();
-    this.$.successToast.text = 'Update success, waiting for reload.';
+    this.$.successToast.text = 'Update success.';
     this.$.successToast.open();
-    setTimeout(window.location.reload.bind(window.location), 5000);
+    //setTimeout(window.location.reload.bind(window.location), 5000);
 
+    // reload the component info to get new sha
+    this.load();
   }else{ // will be handled in handleUpdateError
     //Failed : HTTP error code : 422
     console.log("fail to create a file: " + event.detail.statusText);
@@ -682,24 +673,39 @@ receiveAddCommentToFile: function(event){
 
   if(statusCode == '200' || statusCode == '201'){
     console.log("AddCommentToFile Success");
-    //this.load();
-    this.$.successToast.text = 'Create comment thread, waiting for reload.';
+
+    //this.$.successToast.text = 'Create comment thread, waiting for reload.';
+    this.$.successToast.text = 'Comment thread created.';
     this.$.successToast.open();
-    setTimeout(window.location.reload.bind(window.location), 5000);
+    //setTimeout(window.location.reload.bind(window.location), 5000);
 
     var commentsDialogNode = this.$.commentsDialog;
     commentsDialogNode.open();
 
-  }else{ // will be handled in handleUpdateError
-    //Failed : HTTP error code : 422
-    console.log("AddCommentToFile fail: " + event.detail.statusText);
-    console.log("response.errorStreamString: " + response.errorStreamString);
-    console.log("response.responseCode: " + response.responseCode);
-    console.log("response.responseMessage: " + response.responseMessage);
 
-    this.$.failToast.text =('Create comment thread Fail: '+event.detail.statusText);
-    this.$.failToast.open();
+  }else{// will be handled in on-error
+    console.log("error.")
   }
+},
+
+handleAddCommentToFileError: function(e,detail){
+  console.log(detail.request.status); //the status code, e.g. 422, 409
+  console.log(detail.request.statusText);  //the error status text, here is empty
+  console.log(e.detail.request.xhr.response); // the whole reponse object
+  console.log(e.detail.request.xhr.response.responseMessage); // e.g.Unprocessable Entity
+  //Failed : HTTP error code : 422
+  console.log("AddCommentToFile fail: " + event.detail.statusText);
+  console.log("response.errorStreamString: " + response.errorStreamString);
+  console.log("response.responseCode: " + response.responseCode);
+  console.log("response.responseMessage: " + response.responseMessage);
+
+  // need to clear the commentId attribute in the SVG node
+  // reload SVG content
+  this.$.svgContentLoader.params = {svgurl: this.componentModel.download_url};
+  this.$.svgContentLoader.generateRequest();
+
+  this.$.failToast.text =('Create comment thread Fail: '+event.detail.statusText+". Please try again.");
+  this.$.failToast.open();
 },
 
 handleUpdateError: function(e, detail) {
