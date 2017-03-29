@@ -16,7 +16,7 @@
       paper-card {
           --paper-card-background-color: #fff;
           width: 150px;
-          margin: 4px;
+          margin: 20px 20px 7px 7px;
       }
     </style>
     <openidconnect-signin-aware is-authorized="{{oidcAuthorized}}"
@@ -32,7 +32,8 @@
             last-response="{{projects}}"
             headers="{{header}}"
             loading="{{loading}}"
-            on-request="sentRequest">
+            on-request="sentRequest"
+            on-error="handleProjectsLoadererror">
     </iron-ajax>
 
     <!-- LIST OF PROJECTS -->
@@ -57,8 +58,8 @@
       <paper-textarea label="[[formDesc]]" id="newProjectDesc"></paper-textarea>
 
       <div class="buttons">
-        <paper-button dialog-dismiss>Cancel</paper-button>
         <paper-button dialog-confirm autofocus>Save</paper-button>
+        <paper-button dialog-dismiss>Cancel</paper-button>
       </div>
     </paper-dialog>
 
@@ -207,6 +208,11 @@
           }
         }
         e.preventDefault();
+      },
+      handleProjectsLoadererror: function(e,detail){
+        console.log("request error:" + detail.error.message);
+        this.$.failToast.text = detail.error.message;
+        this.$.failToast.open();
       },
 
       // for debug

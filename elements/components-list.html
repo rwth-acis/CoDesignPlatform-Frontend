@@ -75,7 +75,7 @@
   <iron-ajax
   id="componentsLoader"
   url="{{projectContentsUrl}}"
-  headers="{{ajaxHeader}}"
+  headers="{{header}}"
   params="{{ajaxParams}}"
   on-request="sentRequest"
   last-Response="{{components}}"
@@ -85,7 +85,7 @@
   <iron-ajax
   id="postFileRequest"
   handle-as="json"
-  headers="{{ajaxHeader}}"
+  headers="{{header}}"
   url="[[_apiBaseUrl]]/createfile"
   content-type="application/json"
   method="POST"
@@ -152,8 +152,8 @@
       projectContentsUrl:{
         type: String
       },
-      ajaxHeader:{
-        type: Object
+      header:{
+        type: String
       },
       ajaxParams:{
         type: Object

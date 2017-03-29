@@ -23,6 +23,10 @@ ConfigBehavior = {
       value: 'Co-Design-Platform'
     },
 
+    github_access_token:{
+      type: String,
+    },
+
     commentWriterGroup:{
       type: String,
       value: 'yuwenhuang813'
@@ -70,7 +74,6 @@ ConfigBehavior = {
   },
 
   _handleCurrentOidcUserChanged: function(e, detail) {
-    console.log("_handleCurrentOidcUserChanged:"+detail);
     this.currentOidcUser = detail;
   },
 
@@ -92,7 +95,6 @@ ConfigBehavior = {
     this.oidcAuthorized = true;
     this.oidcAuthHeader = {authorization: "Bearer " + e.detail.access_token};
     this.oidcAccessToken = e.detail.access_token;
-    console.log("oidc header: "+this.oidcAuthHeader);
     var getAgentRequest = document.querySelector('#getCurrentUserAgent');
     getAgentRequest.headers = this.oidcAuthHeader;
     getAgentRequest.generateRequest();
@@ -112,8 +114,8 @@ ConfigBehavior = {
 
   errorHandler: function (e, detail){
     console.log("request error:" + detail.error.message);
-    this.$.superToast.text = detail.error.message;
-    this.$.superToast.open();
+    this.$.failToast.text = detail.error.message;
+    this.$.failToast.open();
   },
 
 }

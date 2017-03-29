@@ -40,7 +40,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   */
   app.isAuthorized = false;
   //app.access_token = null;
-  app.access_token = "undefined";
+  app.github_access_token = "undefined";
   app.hresponse = null;
   app.currentUser = null;
   app.compResponse = null;
@@ -127,6 +127,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app._handleOidcSignedOut = function(e) {
+    console.log("oidc sign out");
     this.oidcAuthorized = false;
     this.oidcAuthHeader = null;
     this.currentUserAgent = null;
@@ -137,22 +138,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   document.addEventListener('github-signin-aware-success', function(e){
 
-        this.access_token = e.detail.access_token;
-        console.log("handleSigninSuccess this.access_token:"+this.access_token);
-        app.access_token = this.access_token;
+        this.github_access_token = e.detail.access_token;
+        console.log("handleSigninSuccess this.access_token:"+this.github_access_token);
+        app.github_access_token = this.github_access_token;
 
         // set header send to backend service
-        app.header = {token: this.access_token};
+        app.header = {token: this.github_access_token};
 
         // set header for directly access GitHub api through frontend
-        app.accessGitHubHeader = {Authorization: 'token '+this.access_token};
+        app.accessGitHubHeader = {Authorization: 'token '+this.github_access_token};
 
         // get GitHub user information
         var request = document.querySelector('#getCurrentGitHubUser');
         request.headers = app.header;
         request.generateRequest();
         // redirect to projects page
-        if (app.route === "home"){
+        //console.log("app.route:"+app.route);
+        if (app.route === "home" || app.route==="projects"){
           page("/projects");
         }
         window.setTimeout(sayHi,500);

@@ -140,6 +140,15 @@
   on-error="handleCreateCommentError"></iron-ajax>
 
 
+  <paper-dialog id="clickElementDialog" modal
+  on-iron-overlay-closed="createCommentThread"
+  style="min-width:10%; max-width:30%; top:100px; max-height: 80%; overflow:scroll;">
+    <div class="buttons">
+      <paper-button raised dialog-confirm autofocus>Create comment</paper-button>
+      <paper-button raised dialog-dismiss>Cancel<iron-icon icon="close"></iron-icon></paper-button>
+    </div>
+  </paper-dialog>
+
   <paper-dialog id="commentsDialog" modal style="min-width:40%; max-width:85%; top:100px; max-height: 80%; overflow:scroll;">
     <h2>Comments</h2>
     <las2peer-comment-thread-widget id="commentsWidget"
@@ -147,7 +156,7 @@
     login-oidc-token={{oidcAccessToken}}>
     </las2peer-comment-thread-widget>
     <div class="buttons">
-      <paper-button dialog-confirm autofocus>Close<iron-icon icon="close"></paper-button>
+      <paper-button dialog-confirm autofocus>Close<iron-icon icon="close"></iron-icon></paper-button>
     </div>
   </paper-dialog>
 
@@ -418,13 +427,17 @@
       // if the element already has a comment
       if(commentId!=null || commentId!=undefined){
         var comments = this.$.commentsWidget;
+        console.log("get commentID before set:"+comments.getAttribute("thread"));
         comments.setAttribute("thread", commentId);
+        console.log("get commentID after set:"+comments.getAttribute("thread"));
+
         var commentsDialogNode = this.$.commentsDialog;
         commentsDialogNode.open();
       }else{
     // else createComment & add commentId in file & update file
     // !need to check oidc & GitHub authorization!!
-        this.createCommentThread();
+        //this.createCommentThread();
+        this.$.clickElementDialog.open();
       }
     }else{
         this.$.failToast.text = ("Please Sign In.");
@@ -472,30 +485,31 @@
     return { x: bb.x, y: bb.y, width: bb.width, height: bb.height }
   },
 
-  createCommentThread: function(){
-    var commentRequest = this.$.createCommentThreadRequest;
-    //commentRequest.url="https://las2peer.dbis.rwth-aachen.de:9098/commentmanagement/threads"
-    commentRequest.url="http://localhost:8080/commentmanagement/threads"
+  createCommentThread: function(e){
+    console.log(e.detail);
+    if(e.detail.confirmed){
+      var commentRequest = this.$.createCommentThreadRequest;
+      //commentRequest.url="https://las2peer.dbis.rwth-aachen.de:9098/commentmanagement/threads"
+      commentRequest.url="http://localhost:8080/commentmanagement/threads"
 
-    // var authUser = this.currentGitHubUser.login + ":" + this.currentGitHubUser.login;
-    // console.log("authUser: " + authUser);
-    // var header = {Authorization: "Basic " + btoa(authUser)};
+      // var authUser = this.currentGitHubUser.login + ":" + this.currentGitHubUser.login;
+      // console.log("authUser: " + authUser);
+      // var header = {Authorization: "Basic " + btoa(authUser)};
 
-    var header = this.oidcAuthHeader;
-    commentRequest.headers = header;
-    commentRequest.body = JSON.stringify({
-      "owner": this.currentOidcUser,
-      //"writer": this.currentOidcUser,
-      //"reader": this.currentOidcUser
-      //"writer": this.currentOidcUser +"," + this.commentWriterGroup,
-      //"reader": this.currentOidcUser +"," + this.commentReaderGroup,
-      "writer": this.commentWriterGroup,
-      "reader": this.commentReaderGroup,
-    });
-
-    //commentRequest.setRequestHeader("Authorization", "Basic " + btoa("User A:userAPass"));
-    //xhttp.send('{owner:"User A", writer:"User B,User C", reader:"User D"}');
-    commentRequest.generateRequest();
+      var header = this.oidcAuthHeader;
+      commentRequest.headers = header;
+      commentRequest.body = JSON.stringify({
+        "owner": this.currentOidcUser,
+        //"writer": this.currentOidcUser,
+        //"reader": this.currentOidcUser
+        //"writer": this.currentOidcUser +"," + this.commentWriterGroup,
+        //"reader": this.currentOidcUser +"," + this.commentReaderGroup,
+        "writer": this.commentWriterGroup,
+        "reader": this.commentReaderGroup,
+      });
+      commentRequest.generateRequest();
+    }
+    e.preventDefault();
   },
 
   handleCreateCommentResponse: function(event){

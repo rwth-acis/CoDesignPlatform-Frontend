@@ -13,10 +13,10 @@ paper-scroll-header-panel {
       height: 100%;
 }
 paper-toolbar{
-      color: #fff;
+      background-color: var(--google-blue-500, #4285f4);
 }
 paper-scroll-header-panel .content {
-     padding: 50px;
+     padding: 55px;
 }
 
 

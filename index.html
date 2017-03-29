@@ -159,18 +159,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <!-- <div id="headerContainer"> -->
         <!-- Main Toolbar -->
         <paper-toolbar id="mainToolbar">
-          <!-- <template is="dom-if" if="{{componentPage(route)}}">
-            <paper-icon-button id="paperToggle" icon="menu" on-tap="toggCompDrawer"></paper-icon-button>
-          </template> -->
-          <div class="app-name">
-            <a href$="{{baseUrl}}">
-              Co-Design Platform
-            </a>
-          </div>
+          <a href$="{{baseUrl}}" tabindex="-1">
+            <paper-icon-button icon="home"></paper-icon-button>
+          </a>
+          <div class="title">Co-Design Platform</div>
           <template is="dom-if" if="{{isAuthorized}}">
             <span class="flex"></span>
             <div class="currentGitHubUser">
-              Welcome [[currentGitHubUser.login]]! Your GitHub email is [[currentGitHubUser.email]], currentAgent is [[currentUserAgent]]
+              Welcome [[currentGitHubUser.login]]!(GitHub email: [[currentGitHubUser.email]]), currentAgent is [[currentUserAgent]]
             </div>
           </template>
           <span class="flex"></span>
@@ -247,7 +243,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <section data-route="component-info" href="{{baseUrl}}component-info" style="height:100%;">
           <component-detail id="componentDetail"
           is-authorized="{{isAuthorized}}"
-          access-token="{{access_token}}"
+          access-token="{{github_access_token}}"
           current-git-hub-user="{{currentGitHubUser}}"
           current-user-agent="{{currentUserAgent}}"
           current-oidc-user="{{currentOidcUser}}"
