@@ -110,20 +110,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   });
 
   app._handleSigninSuccessApp = function(e) {
-    this._handleOidcSigninSuccess(e);
+    app._handleOidcSigninSuccess(e);
 
+    // if use the following 3 lines, the openidconnect-signin-token key in localStorage will be deleted
+    // and cannot remain loginin session
+    // don't know why...
+    // because in app._handleCurrentUserAgentError
+    // document.getElementById('openidconnectSignin').signOut();
+    // even the ajax call is successful response
     var getAgentRequest = document.querySelector('#getCurrentUserAgent');
-    getAgentRequest.headers = this.oidcAuthHeader;
+    getAgentRequest.headers = {authorization: "Bearer " + e.detail.access_token};
     getAgentRequest.generateRequest();
-
   },
 
   app._handleOidcSigninSuccess = function(e) {
+    console.log("oidc sign in");
     this.oidcAuthorized = true;
     this.oidcAuthHeader = {authorization: "Bearer " + e.detail.access_token};
     this.oidcAccessToken = e.detail.access_token;
-    console.log("oidc header: "+this.oidcAuthHeader);
-
+    //console.log("oidcAccessToken: "+this.oidcAccessToken);
   };
 
   app._handleOidcSignedOut = function(e) {
@@ -132,6 +137,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     this.oidcAuthHeader = null;
     this.currentUserAgent = null;
     this.currentOidcUser = null;
+    this.oidcAccessToken = null;
   };
 
 
@@ -176,20 +182,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app._handleCurrentUserAgentResponse = function(event){
-    console.log("_handleCurrentUserAgentResponse:" + event.detail.response);
+    console.log("_handleCurrentUserAgentResponse current user agent:" + event.detail.response);
     this.currentUserAgent = event.detail.response;
     this.currentOidcUser = event.detail.response;
     //this.fire('iron-signal', {name: 'current-oidc-user-changed', data: this.currentUserAgent});
   };
 
   app._handleCurrentUserAgentError = function(event,detail){
-
+    console.log("app._handleCurrentUserAgentError");
     // how to get error status code see https://github.com/PolymerElements/iron-ajax/issues/65
     console.log(detail.error); //the error object
     console.log(detail.request.status); //the status code
     console.log(detail.request.statusText);  //the error status text
 
-    document.getElementById('openidconnectSignin').signOut();
+    //document.getElementById('openidconnectSignin').signOut();
 
     // if the agent does not exist, then create it
     // backend service will create this agent

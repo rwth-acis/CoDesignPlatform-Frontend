@@ -197,26 +197,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         id="getCurrentGitHubUser"
         url="{{baseHref}}/getCurrentGitHubUser"
         method="GET"
-        on-request = "sentRequest"
-        on-error = "errorHandler"
-        on-response="_handleCurrentGitHubUserResponse">
+        on-request="sentRequest"
+        on-response="_handleCurrentGitHubUserResponse"
+        on-error="errorHandler">
       </iron-ajax>
 
       <iron-ajax
         id="getCurrentUserAgent"
         url="{{baseHref}}/getcurrentagent"
         method="GET"
-        on-request = "sentRequest"
-        on-error = "_handleCurrentUserAgentError"
-        on-response="_handleCurrentUserAgentResponse">
+        on-request= "sentRequest"
+        on-response="_handleCurrentUserAgentResponse"
+        on-error="_handleCurrentUserAgentError">
       </iron-ajax>
 
       <iron-ajax
         id="creaetUserAgent"
         url="{{baseHref}}/createagent"
         method="GET"
-        on-request = "sentRequest"
-        on-error = "_handleCreateUserAgentError"
+        on-request="sentRequest"
+        on-error="_handleCreateUserAgentError"
         on-response="_handleCreateUserAgentResponse">
       </iron-ajax>
 

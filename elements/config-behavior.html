@@ -52,6 +52,11 @@ ConfigBehavior = {
       observer: '_currentGitHubUserChanged'
     },
 
+    oidcAccessToken:{
+      type: String,
+      observer: '_oidcAccessTokenChanged'
+    },
+
     oidcAuthorized: {
       type: Boolean
     },
@@ -73,6 +78,12 @@ ConfigBehavior = {
     this.fire('iron-signal', {name: 'current-oidc-user-changed', data: newValue});
   },
 
+  _oidcAccessTokenChanged: function(newValue,oldValue){
+    console.log("_oidcAccessTokenChanged old token:" + oldValue);
+    console.log("_oidcAccessTokenChanged new token:" + newValue);
+    console.log("oidcAccessToken:"+this.oidcAccessToken);
+  },
+
   _handleCurrentOidcUserChanged: function(e, detail) {
     this.currentOidcUser = detail;
   },
@@ -91,13 +102,14 @@ ConfigBehavior = {
     //this.fire('iron-signal', {name: 'current-user-changed', data: newValue});
   },
 
+
   _handleOidcSigninSuccess: function(e) {
     this.oidcAuthorized = true;
     this.oidcAuthHeader = {authorization: "Bearer " + e.detail.access_token};
     this.oidcAccessToken = e.detail.access_token;
-    var getAgentRequest = document.querySelector('#getCurrentUserAgent');
-    getAgentRequest.headers = this.oidcAuthHeader;
-    getAgentRequest.generateRequest();
+    // var getAgentRequest = document.querySelector('#getCurrentUserAgent');
+    // getAgentRequest.headers = this.oidcAuthHeader;
+    // getAgentRequest.generateRequest();
   },
 
   _handleOidcSignedOut: function(e) {
