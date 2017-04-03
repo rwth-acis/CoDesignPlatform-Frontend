@@ -323,7 +323,7 @@
             //url = "http://localhost:8080/github-signin/#github-signin";
 
             var popup = window.open(url, "github-signin", "width=" + popupWidth + ",height=" + popupHeight + ",toolbar=no,location=yes,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no");
-            console.log("popup url: "+url);
+            //console.log("popup url: "+url);
 
             popup.focus();
 
@@ -574,14 +574,15 @@ Example with offline:
               if (storageEvent.key === "github-signin-performed") {
                   this._setSignedIn(true); //TODO
                   this._setNeedAdditionalAuth(false); //TODO
-                  console.log("onGitHubSignInStorageEvent, token:"+this.token);
+                  //console.log("onGitHubSignInStorageEvent, token:"+this.token);
 
                   // Signal all buttons to update their state based on the user.
                   var authInfo = {
                       'access_token': localStorage['github-signin-token'],
-                      'id_token': localStorage['github-signin-idtoken'] }
+                      'id_token': localStorage['github-signin-idtoken']
+                  };
 
-                  console.log("localStorage['github-signin-token']:"+localStorage['github-signin-token']);
+                  //console.log("localStorage['github-signin-token']:"+localStorage['github-signin-token']);
 
                   this.fire('github-signin-aware-success', authInfo);
                   this._setIsAuthorized(true);
@@ -601,7 +602,6 @@ Example with offline:
             }
             else{
               this.codeValue = event.data;
-              console.log("this.codeValue:"+this.codeValue);
 
               // work with local DOM, need to use this.root
               // this.$.getAccessToken doesn't work
@@ -614,6 +614,27 @@ Example with offline:
           }
           window.addEventListener('message', receiveMessage.bind(this), false);
           window.addEventListener('storage', onGitHubSignInStorageEvent.bind(this), false);
+
+          window.addEventListener("storage", function(e){
+            console.debug(e);
+          },false);
+
+          // check if we are still logged in
+          if (localStorage['openidconnect-signin-token'] && localStorage['openidconnect-signin-idtoken']) {
+            console.log("already signin GitHub");
+            this._setSignedIn(true); //TODO
+            this._setNeedAdditionalAuth(false); //TODO
+
+            // Signal all buttons to update their state based on the user.
+            var authInfo = {
+              'access_token': localStorage['github-signin-token'],
+              'id_token': localStorage['github-signin-idtoken']
+            };
+            this.fire('github-signin-aware-success', authInfo);
+            this._setIsAuthorized(true);
+          }
+
+
       },
 
       detached: function() {
@@ -637,19 +658,23 @@ Example with offline:
         localStorage.setItem('github-signin-token', this.token);
         localStorage.setItem('github-signin-idtoken', this.token);
 
-        console.log("before set localStorage[github-signin-performed]:"+localStorage['github-signin-performed']);
+        console.log("localStorage[github-signin-token]:"+localStorage['github-signin-token']);
+
+
+        //console.log("before set localStorage[github-signin-performed]:"+localStorage['github-signin-performed']);
 
         // notify main window with this meta-storage element
         // please make sure before this line, this item is false
         // otherwise, storageEvent will not be called
         localStorage.setItem('github-signin-performed', true);
-        //console.log("storageEvent.key:"+storageEvent.key);
         console.log("localStorage[github-signin-performed]:"+localStorage['github-signin-performed']);
       },
 
+      // for debug
       makeTokenRequest: function(e,detail){
         console.log("make a request detail.request.url:"+detail.request.url);
       },
+
       errorHandler: function (e, detail){
           console.log("request error:"+detail.error.message);
       },

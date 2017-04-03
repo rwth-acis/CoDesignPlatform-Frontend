@@ -178,7 +178,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                 on-openidconnect-signin-aware-success="_handleSigninSuccessApp"
                                 on-openidconnect-signin-aware-signed-out="_handleOidcSignedOut"></openidconnect-signin>
 
-          <github-signin id="githubSignInBtn" is-authorized="{{isAuthorized}}" scopes="repo" client-id="b6d65034ff402a6e6f4d" server="https://github.com/login/oauth/authorize" base-href={{baseHref}}></github-signin>
+          <github-signin id="githubSignInBtn" is-authorized="{{isAuthorized}}" scopes="repo"
+                         client-id="b6d65034ff402a6e6f4d"
+                         server="https://github.com/login/oauth/authorize"
+                         on-github-signin-aware-success="_handleGitHubSigninSuccess"
+                         base-href={{baseHref}}></github-signin>
         </paper-toolbar>
       <!-- </div> -->
 

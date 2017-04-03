@@ -650,7 +650,7 @@ GitHubOIDC.getJsonObject = function (jsonS) {
     var jws = new KJUR.jws.JWS();
     //jsonS = "{\"issuer\": \"https://github.com/login/oauth/authorize\"}";
     if(jws.isSafeJSONString(jsonS)) {
-        console.log("jsonS isSafeJSONString");
+        //console.log("jsonS isSafeJSONString");
         return jws.readSafeJSONString(jsonS);
     }
     return null;
@@ -765,7 +765,7 @@ GitHubOIDC.discover = function(issuer)
         var discoveryDoc = "{\"issuer\": \"https://github.com/login/oauth/authorize\",\"authorization_endpoint\": \"https://github.com/login/oauth/authorize\"}";
         if(discoveryDoc) {
           discovery = this.getJsonObject(discoveryDoc)
-          console.log("discovery="+discovery);
+          //console.log("discovery="+discovery);
         }
 
     }

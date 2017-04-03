@@ -24,7 +24,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   var app = document.querySelector('#app'); // # means use id as a CSS selector
   console.log("app.id:" + app.id);
-  app.baseHref = "http://localhost:8080/template";
+  app.baseHref = "http://localhost:8080/codesign";
+  //app.baseHref = "https://las2peer.dbis.rwth-aachen.de:9098/codesign"
 
   //app.baseUrl = '/template/';
   if (window.location.port === '') {  // if production
@@ -142,8 +143,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 
 
-  document.addEventListener('github-signin-aware-success', function(e){
-
+  //document.addEventListener('github-signin-aware-success', function(e){
+  app._handleGitHubSigninSuccess = function(e){
         this.github_access_token = e.detail.access_token;
         console.log("handleSigninSuccess this.access_token:"+this.github_access_token);
         app.github_access_token = this.github_access_token;
@@ -164,7 +165,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           page("/projects");
         }
         window.setTimeout(sayHi,500);
-      });
+  };
+  //});
 
   app._handleCurrentGitHubUserResponse = function(event){
       var user = event.detail.response;
@@ -316,7 +318,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     function sayHi() {
       if (app.currentGitHubUser != null) {
         var tst = document.getElementById('superToast');
-        //tst.text = i18n.getMsg('welcome') + app.currentUser.firstName;
         tst.text = "Welcome " + app.currentGitHubUser.login;
         tst.open();
       }
