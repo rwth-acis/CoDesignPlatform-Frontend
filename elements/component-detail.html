@@ -30,38 +30,6 @@
     background-color: var(--list-hover-background-color);
   }
 
-  paper-fab {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-  }
-
-  form {
-    position: fixed;
-    bottom: 0px;
-    right: 80px;
-    width: 350px;
-    margin-bottom: 5px;
-    background-color: white;
-    max-height: none !important;
-  }
-
-  form > input {
-    height: 30%;
-    margin-top: 5px;
-    margin-bottom: 5px;
-  }
-
-  form > paper-button {
-    width: 45%;
-    margin-top: 5px;
-  }
-
-  form > paper-button:not([disabled]) {
-    background: var(--paper-light-blue-500);
-    color: white;
-  }
-
   paper-material {
     background: transparent;
     height: calc(100% - 80px);
@@ -172,8 +140,12 @@
 
 
   <template is="dom-if" if="{{showFileUpdateForm}}">
+
     <form is="iron-form" id="fileform" name="updateForm" on-iron-form-presubmit="updateFile">
-      <input label="[[labelFile]]" type="file" name="filecontent" required disabled="[[_updatingFile]]"/>
+      <div>
+        <p>Select a file from your file system to upload.</p>
+        <input label="[[labelFile]]" type="file" name="filecontent" required disabled="[[_updatingFile]]"/>
+      </div>
       <paper-input id="updateMessage" name="updateMessage" label="[[labelIdentifier]]" type="text" value="{{identifier}}" placeholder="please give a description" required disabled="[[_updatingFile]]"/></paper-input>
       <paper-button raised on-tap="_submitButton" disabled="[[_updatingFile]]">[[labelupdateButton]]</paper-button>
       <paper-button raised on-tap="_cancelButton">[[labelCancelButton]]</paper-button>
@@ -407,41 +379,49 @@
 
     this.selectedElementId = snapEl.node.id;
     console.log("selectedElementId:"+this.selectedElementId);
-    firstSelectedEl = snapEl;
+    // only when the node has id attribute, it can be add comment
+    if(this.selectedElementId){
+      firstSelectedEl = snapEl;
 
-    // snapEl.node.attr({a:"www.google.com"}); // doesn't work
-    // snapEl.node is an DOM element
-    var s = Snap(snapEl.node);
-    //s.attr({a:"www.google.com"}); //set attribute
-    //var commentId = s.attr("commentId"); //get attribute doesn't work?
-    var commentId = s.attr("commentid");
+      // snapEl.node.attr({a:"www.google.com"}); // doesn't work
+      // snapEl.node is an DOM element
+      var s = Snap(snapEl.node);
+      //s.attr({a:"www.google.com"}); //set attribute
+      //var commentId = s.attr("commentId"); //get attribute doesn't work?
+      var commentId = s.attr("commentid");
 
-    console.log("commentId:"+commentId);
-    console.log("this.currentOidcUser:"+this.currentOidcUser);
+      console.log("commentId:"+commentId);
+      console.log("this.currentOidcUser:"+this.currentOidcUser);
 
-    // make red hightlight dot-line
-    this.highlightEl(snapEl);
-    // check oidc authorization, otherwise cannot read comment
-    // if has commentId attribute , show existed comment (need comment id)
-    if(this.currentOidcUser!=null&&this.currentOidcUser!=undefined){
-      // if the element already has a comment
-      if(commentId!=null || commentId!=undefined){
-        var comments = this.$.commentsWidget;
-        console.log("get commentID before set:"+comments.getAttribute("thread"));
-        comments.setAttribute("thread", commentId);
-        console.log("get commentID after set:"+comments.getAttribute("thread"));
+      // make red hightlight dot-line
+      this.highlightEl(snapEl);
+      // check oidc authorization, otherwise cannot read comment
+      // if has commentId attribute , show existed comment (need comment id)
+      if(this.currentOidcUser!=null&&this.currentOidcUser!=undefined){
+        // if the element already has a comment
+        if(commentId!=null || commentId!=undefined){
+          var comments = this.$.commentsWidget;
+          console.log("get commentID before set:"+comments.getAttribute("thread"));
+          comments.setAttribute("thread", commentId);
+          console.log("get commentID after set:"+comments.getAttribute("thread"));
 
-        var commentsDialogNode = this.$.commentsDialog;
-        commentsDialogNode.open();
+          var commentsDialogNode = this.$.commentsDialog;
+          commentsDialogNode.open();
+        }else{
+      // else createComment & add commentId in file & update file
+      // !need to check oidc & GitHub authorization!!
+          //this.createCommentThread();
+          this.$.clickElementDialog.open();
+        }
       }else{
-    // else createComment & add commentId in file & update file
-    // !need to check oidc & GitHub authorization!!
-        //this.createCommentThread();
-        this.$.clickElementDialog.open();
-      }
-    }else{
         this.$.failToast.text = ("Please Sign In.");
         this.$.failToast.open();
+      }
+    }
+    else{
+      console.log("Selected element has no id. Cannot add comment");
+      this.$.failToast.text = ("Selected element has no id. Cannot add comment. Please select another element");
+      this.$.failToast.open();
     }
   },
 
@@ -466,7 +446,7 @@
     var fileContent = btoa(newContentString); // from string to base64
     var fileName = this.componentModel.name;
 
-    this.sendFile("addCommentToFile",fileName,"add comment to  "+this.selectedElementId,fileContent);
+    this.sendFile("addCommentToFile",fileName,this.currentOidcUser+" add comment to  "+this.selectedElementId,fileContent);
   },
 
   highlightEl: function(el){
@@ -489,8 +469,10 @@
     console.log(e.detail);
     if(e.detail.confirmed){
       var commentRequest = this.$.createCommentThreadRequest;
-      //commentRequest.url="https://las2peer.dbis.rwth-aachen.de:9098/commentmanagement/threads"
-      commentRequest.url="http://localhost:8080/commentmanagement/threads"
+      //commentRequest.url = "https://las2peer.dbis.rwth-aachen.de:9098/commentmanagement/threads"
+      //commentRequest.url = "http://localhost:8080/commentmanagement/threads"
+      commentRequest.url = "http://134.61.184.148:8080/commentmanagement/threads";
+      //commentRequest.url = "http://192.168.1.60:8080/commentmanagement/threads";
 
       // var authUser = this.currentGitHubUser.login + ":" + this.currentGitHubUser.login;
       // console.log("authUser: " + authUser);

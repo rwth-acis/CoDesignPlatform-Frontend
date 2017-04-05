@@ -24,7 +24,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   var app = document.querySelector('#app'); // # means use id as a CSS selector
   console.log("app.id:" + app.id);
-  app.baseHref = "http://localhost:8080/codesign";
+  //app.baseHref = "http://localhost:8080/codesign";
+  app.baseHref = "http://134.61.184.148:8080/codesign";
+  //app.baseHref = "http://192.168.1.60:8080/codesign";
   //app.baseHref = "https://las2peer.dbis.rwth-aachen.de:9098/codesign"
 
   //app.baseUrl = '/template/';
@@ -61,12 +63,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.showFileUploadForm = false;
   app.currentProject = "";
 
-  app.displayInstalledToast = function() {
-    // Check to make sure caching is actually enabled—it won't be in the dev environment.
-    if (!document.querySelector('platinum-sw-cache').disabled) {
-      document.querySelector('#caching-complete').show();
-    }
-  };
 
   // Listen for template bound event to know when bindings
   // have resolved and content has been stamped to the page
@@ -82,7 +78,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   // See https://github.com/Polymer/polymer/issues/1381
   window.addEventListener('WebComponentsReady', function() {
     // imports are loaded and elements have been registered
-    //this.i18n = document.querySelector('i18n-msg');
     app.loaded = true;
     console.log("app.js WebComponentsReady");
   });
@@ -232,8 +227,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.errorHandler = function (e, detail){
     console.log("request error:" + detail.error.message);
-    this.$.superToast.text = detail.error.message;
-    this.$.superToast.open();
+    // this.$.superToast.text = detail.error.message;
+    // this.$.superToast.open();
   };
 
   /**

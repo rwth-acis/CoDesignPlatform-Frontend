@@ -14,13 +14,39 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <dom-module id="shared-styles">
   <template>
     <style>
-    
+
       paper-fab {
         position: fixed;
         bottom: 30px;
         right: 30px;
       }
 
+      form {
+        position: fixed;
+        bottom: 0px;
+        right: 80px;
+        width: 350px;
+        margin-bottom: 10px;
+        margin-right:10px;
+        background-color: white;
+        max-height: none !important;
+      }
+
+      form > input {
+        height: 30%;
+        margin-top: 5px;
+        margin-bottom: 5px;
+      }
+
+      form > paper-button {
+        width: 45%;
+        margin-top: 5px;
+      }
+
+      form > paper-button:not([disabled]) {
+        background: var(--paper-light-blue-500);
+        color: white;
+      }
 
       #failToast {
         --paper-toast-background-color: red;

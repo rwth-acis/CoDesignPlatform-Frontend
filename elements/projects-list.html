@@ -1,6 +1,7 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="config-behavior.html">
 <link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../bower_components/openidconnect-signin/openidconnect-signin.html">
 
 
@@ -15,8 +16,19 @@
       }
       paper-card {
           --paper-card-background-color: #fff;
-          width: 150px;
+          width: 250px;
           margin: 20px 20px 7px 7px;
+          /*margin: auto;*/
+      }
+      .projects-content {
+        @apply(--layout-flex);
+        float: left;
+      }
+      .projects-name { @apply(--paper-font-headline); }
+      .projects-description { color: var(--paper-grey-600); margin: 10px 0; }
+      paper-icon-button.rate-icon {
+        --iron-icon-fill-color: white;
+        --iron-icon-stroke-color: var(--paper-grey-600);
       }
     </style>
     <!-- <openidconnect-signin-aware is-authorized="{{oidcAuthorized}}"
@@ -37,13 +49,18 @@
     </iron-ajax>
 
     <!-- LIST OF PROJECTS -->
-    <!-- <div class="layout horizontal center"> -->
+    <div class="layout horizontal center">
     <template is="dom-repeat" items="{{projects}}">
-      <paper-card heading="[[item.name]]" on-tap="onProjectTap">
-                    <!--<div class="card-content">[[item.html_url]]</div>-->
+      <paper-card class="projects" on-tap="onProjectTap">
+        <div class="projects-content">
+            <div class="card-content">
+              <div class="projects-name">[[item.name]]</div>
+              <div class="projects-description">[[item.description]]</div>
+            </div>
+        </div>
       </paper-card>
     </template>
-    <!-- </div> -->
+    </div>
 
     <template is="dom-if" if="{{isAuthorized}}">
       <paper-fab id="createProjectBtn" class="fabAdd" on-tap="onCreateProjectTap" icon="add"></paper-fab>

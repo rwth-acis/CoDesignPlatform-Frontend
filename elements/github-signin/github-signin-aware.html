@@ -298,10 +298,13 @@
             // start the sign-in flow
 
             // set client_id and redirect_uri
+            console.log("window.location:"+window.location);
             var clientInfo = {
                 client_id: this.clientId,
                 //redirect_uri: window.location
-                redirect_uri: 'http://localhost:3000/signin-result',
+                //redirect_uri: 'http://localhost:3000/signin-result',
+                redirect_uri: 'http://134.61.184.148:3000/signin-result'
+                //redirect_uri: 'http://192.168.1.60:3000/signin-result'
             };
             GitHubOIDC.setClientInfo(clientInfo);
             var providerInfo = GitHubOIDC.discover(this.server);
@@ -318,7 +321,7 @@
                         response_type : 'code'
                     }
             );
-
+            console.log("popup url: "+url);
             //var url = this.server + "/authorize?response_type=token&client_id=" + this.clientId + "&redirect_uri=" + window.location + "&scope=" + this.scopes + "&state=";
             //url = "http://localhost:8080/github-signin/#github-signin";
 
@@ -596,7 +599,8 @@ Example with offline:
           // main window receives code from popup window and generate request to ask access_token
           function receiveMessage(event){
             var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
-            if (origin !== "http://localhost:3000"){
+            if (origin !== "http://134.61.184.148:3000"){
+            //if(origin !== "http://localhost:3000"){
               console.log("origin:"+origin);
               return;
             }

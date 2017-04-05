@@ -10,7 +10,9 @@ ConfigBehavior = {
   properties: {
     _apiBaseUrl: {
       type: String,
-      value: 'http://localhost:8080/codesign'
+      //value: 'http://localhost:8080/codesign'
+      value:"http://134.61.184.148:8080/codesign"
+      //value: "http://192.168.1.60:8080/codesign"
       //value: 'https://las2peer.dbis.rwth-aachen.de:9098/codesign'
     },
 
@@ -28,14 +30,19 @@ ConfigBehavior = {
       type: String,
     },
 
+    commentOwnerGroup:{
+      type: String,
+      value: 'yuwenhuang,CoDesignUserA,CoDesignUserB,CoDesignUserC,CoDesignUserD,CoDesignUserE,CoDesignUserF'
+    },
+
     commentWriterGroup:{
       type: String,
-      value: 'yuwenhuang813'
+      value: 'CoDesignUserA,CoDesignUserB,CoDesignUserC,CoDesignUserD,CoDesignUserE,CoDesignUserF'
     },
 
     commentReaderGroup:{
       type: String,
-      value: 'yuwenhuang813,yuwenhuang.cs97g'
+      value: 'CoDesignUserZ'
     },
 
     currentOidcUser: {
